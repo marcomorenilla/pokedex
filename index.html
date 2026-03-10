@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="shortcut icon" href="assets/console-1.svg" type="image/x-icon">
+</head>
+
+<body class="roboto bg-[var(--poke-white)]">
+    <nav
+        class="shadow-lg  bg-(--poke-yellow) rounded-sm md:rounded-b-2xl shadow- flex flex-col gap-5 justify-between items-start md:items-center p-10 w-full">
+        <div class="flex gap-5 items-center justify-between">
+            <img src="assets/logo.png" alt="pokemon logo" class="hidden md:block  size-15 md:size-20">
+            <h1 class="text-[var(--poke-white)] font-bold text-5xl text-shadow-lg text-shadow-(--poke-blue)">Pokédex
+            </h1>
+        </div>
+
+
+
+        <section id="search-container" class="md:w-3/6">
+            <div id="search-group-container" class="flex relative items-center gap-1">
+                <input type="text" name="search-input" id="search-input"
+                    class="w-full bg-[var(--poke-white)] opacity-75 py-1 px-4 focus:outline-none focus:border-3 focus:border-[var(--poke-green)] rounded-lg">
+                <button id="search-btn"
+                    class="bg-[var(--poke-blue)] p-1 z-1  absolute right-0 rounded-r-lg hover:bg-blue-700">
+                    <img src="assets/search-white.svg" alt="search-icon" class="size-6">
+                </button>
+
+
+            </div>
+        </section>
+    </nav>
+    <main class="flex flex-col items-center">
+        <div id="grid-card-section" class="p-3 mt-2 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-3"></div>
+
+        <button id="show-all-btn"
+            class=" hidden border rounded-full bg-(--poke-yellow) text-(--poke-blue) hover:bg-yellow-700 font-bold p-1 size-fit">Mostrar
+            todos</button>
+
+
+
+    </main>
+
+
+
+    <dialog id="loading-dialog" class="outline-none fixed self-center overflow-hidden justify-self-center bg-transparent">
+
+        <div class="loading p-5">
+            <h1
+                class="text-2xl border-3 rounded-full p-2 bg-(--poke-white)  border-(--poke-red) text-(--poke-red) animate-bounce font-bold">
+                Cargando...</h1>
+        </div>
+    </dialog>
+
+    <dialog id="no-content-dialog" class="outline-none fixed self-center justify-self-center md:rounded-full">
+
+        <div class="flex flex-col items-center border-(--poke-red)  bg-white p-3  ">
+            <div class="loading p-5">
+                <h1 class="text-2xl   p-2    text-(--poke-red) font-bold">
+                    No se ha encontrado ninguna búsqueda que coincida, vuelve a intentarlo</h1>
+            </div>
+            <button
+                class="no-content-dialog-btn bg-(--poke-red) text-white p-2 rounded-full font-bold hover:bg-red-700">Aceptar</button>
+
+        </div>
+
+    </dialog>
+
+    <dialog id="pokemon-stats" class="outline-none max-h-none max-w-none">
+        
+    </dialog>
+
+    <script type="module" src="js/main.js"></script>
+
+</body>
+
+</html>

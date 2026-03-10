@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+:root {
+    --poke-red: #CC0000;
+    --poke-white: #f5f5f5;
+    --poke-black: #1a1a1a;
+    --poke-yellow: #ffcb05;
+    --poke-blue: #6390f0;
+    --poke-orange: #f08030;
+    --poke-green: #78c850;
+    --poke-dark-gray: #2e2e2e;
+
+    /* --- Colores de tipos --- */
+    --poke-normal: #A8A878;
+    --poke-fire: var(--poke-orange);
+    --poke-water: var(--poke-blue);
+    --poke-grass: var(--poke-green);
+    --poke-electric: var(--poke-yellow);
+    --poke-ice: #98D8D8;
+    --poke-fighting: var(--poke-red);
+    --poke-poison: #A040A0;
+    --poke-ground: #E0C068;
+    --poke-flying: #A890F0;
+    --poke-psychic: #F85888;
+    --poke-bug: #A8B820;
+    --poke-rock: #B8A038;
+    --poke-ghost: #705898;
+    --poke-dragon: #7038F8;
+    --poke-dark: #705848;
+    --poke-steel: #B8B8D0;
+    --poke-fairy: #EE99AC;
+}
+
+.roboto {
+    font-family: 'Roboto', monospace;
+}
+
+meter {
+  /* Revert the meter element to default styling */
+  border: revert;
+}

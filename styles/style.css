@@ -29,13 +29,52 @@
     --poke-dark: #705848;
     --poke-steel: #B8B8D0;
     --poke-fairy: #EE99AC;
+    --poke-stellar: #7776a8 ;
+    --poke-unknown: var(--poke-psychic);
 }
 
 .roboto {
     font-family: 'Roboto', monospace;
 }
 
-meter {
-  /* Revert the meter element to default styling */
-  border: revert;
+.animate-visible{
+    animation: visible 1s ease-in-out;
 }
+
+.animate-opacidad{
+    animation: opacidad 1s ease-in-out;
+}
+
+.animate-stat{
+    animation: stat 2s ease-in-out;
+}
+
+@keyframes visible{
+    0%{
+        transform: translateX(100%);
+    }
+    100%{
+        transform: translateX(0);
+    }
+
+}
+
+@keyframes stat{
+    0%{
+        transform: translateX(-100%);
+    }
+    100%{
+        transform: translateX(0);
+    }}
+
+
+@keyframes opacidad{
+    0%{
+        opacity: 0;
+    }
+    100%{
+        opacity: 1;
+    }
+
+}
+

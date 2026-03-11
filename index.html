@@ -21,10 +21,12 @@
 
 
 
-        <section id="search-container" class="md:w-3/6">
-            <div id="search-group-container" class="flex relative items-center gap-1">
-                <input type="text" name="search-input" id="search-input"
-                    class="w-full bg-[var(--poke-white)] opacity-75 py-1 px-4 focus:outline-none focus:border-3 focus:border-[var(--poke-green)] rounded-lg">
+        <section id="search-container" class="md:w-3/6 w-full ">
+            <div id="search-group-container" class="flex relative w-full items-center gap-1">
+                <input type="text" list="pokemon-list" name="search-input" id="search-input"
+                    placeholder="Introduce nombre o número..."
+                    class="w-full bg-[var(--poke-white)]  opacity-75 py-1 md:px-4 px-1 focus:outline-none focus:border-3 focus:border-[var(--poke-green)] rounded-lg">
+                <datalist id="pokemon-list"></datalist>
                 <button id="search-btn"
                     class="bg-[var(--poke-blue)] p-1 z-1  absolute right-0 rounded-r-lg hover:bg-blue-700">
                     <img src="assets/search-white.svg" alt="search-icon" class="size-6">
@@ -33,21 +35,28 @@
 
             </div>
         </section>
+        
+            
+        </section>
     </nav>
     <main class="flex flex-col items-center">
+        <section id="types-section" class="flex mt-2 p-3 md:w-3/6 flex-wrap gap-2"></section>
         <div id="grid-card-section" class="p-3 mt-2 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-3"></div>
 
         <button id="show-all-btn"
             class=" hidden border rounded-full bg-(--poke-yellow) text-(--poke-blue) hover:bg-yellow-700 font-bold p-1 size-fit">Mostrar
             todos</button>
 
-
+        <div>
+            <div id="scroll-trigger"></div>
+        </div>
 
     </main>
 
 
 
-    <dialog id="loading-dialog" class="outline-none fixed self-center overflow-hidden justify-self-center bg-transparent">
+    <dialog id="loading-dialog"
+        class="outline-none fixed self-center overflow-hidden justify-self-center bg-transparent">
 
         <div class="loading p-5">
             <h1
@@ -70,9 +79,10 @@
 
     </dialog>
 
-    <dialog id="pokemon-stats" class="outline-none max-h-none max-w-none">
-        
-    </dialog>
+    <div id="pokemon-stats"
+        class="fixed inset-0 hidden p-2 z-2  bg-yellow-500/50 backdrop-blur-sm flex items-center justify-end">
+
+    </div>
 
     <script type="module" src="js/main.js"></script>
 

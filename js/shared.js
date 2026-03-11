@@ -16,10 +16,43 @@ export const typeColors = {
     dragon: '--poke-dragon',
     dark: '--poke-dark',
     steel: '--poke-steel',
-    fairy: '--poke-fairy'
+    fairy: '--poke-fairy',
+    stellar: '--poke-stellar',
+    unknown: '--poke-unknown'
 };
 
 export const state = {
     isLoading: true,
-    pokemonList: []
+    pokemonList: [],
+    favorites: JSON.parse(localStorage.getItem('favorites')) || [],
+    requestStatus: ''
+}
+
+export const traduccionTipos = {
+    normal: "normal",
+    fire: "fuego",
+    water: "agua",
+    grass: "planta",
+    electric: "eléctrico",
+    ice: "hielo",
+    fighting: "lucha",
+    poison: "veneno",
+    ground: "tierra",
+    flying: "volador",
+    psychic: "psíquico",
+    bug: "bicho",
+    rock: "roca",
+    ghost: "fantasma",
+    dragon: "dragón",
+    dark: "siniestro",
+    steel: "acero",
+    fairy: "hada",
+    stellar: "estrella",
+    unknown: "desconocido"
+};
+
+
+export const pagination = {
+    init: 18,
+    offset: 0,
 }

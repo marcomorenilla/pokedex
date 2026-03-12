@@ -364,7 +364,7 @@ async function generateDetails(pokemon) {
     }).join('')}
                 </div>
 
-                <div class="flex justify-between px-4 mt-3">
+                <div class="flex max-w-1/2 m-auto justify-between px-4 mt-3">
                     <h2 class="font-bold md:text-xl">Altura: </h2>
                     <h2 class="md:text-xl">${pokemon.height / 10}m</h2>
                     <h2 class="font-bold md:text-xl">Peso: </h2>

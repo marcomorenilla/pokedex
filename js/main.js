@@ -65,10 +65,8 @@ async function renderUi(pokemonList, append) {
         gridSection.innerHTML = ''
     }
 
-    if (state.requestStatus == 'success') {
+    await generateContent(pokemonList)
 
-        await generateContent(pokemonList)
-    }
 
 }
 
@@ -139,11 +137,10 @@ async function handleFilter(observer, trigger) {
                 observer.observe(trigger)
             }
 
-
-
         })
 
     })
+
 
 }
 
@@ -252,7 +249,7 @@ function generateCard(pokemon) {
 
 
     const cartTpl = /*html */`
-    <article  class="rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white) overflow-hidden shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
+    <article  class="rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white)  shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
         <div id="card-${pokemon.id}"class="flex relative w-auto h-auto flex-col  items-center">
             <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
                 <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-30 z-1">
@@ -319,12 +316,12 @@ function generateCard(pokemon) {
     });
 
 
-    showMore.addEventListener('click', async () => await showDetails(pokemon))
+    showMore.addEventListener('click', async () => await generateDetails(pokemon))
 
 }
 
 
-async function showDetails(pokemon) {
+async function generateDetails(pokemon) {
     const stastDialog = document.querySelector('#pokemon-stats')
     const sprites = pokemon.sprites ? pokemon.sprites : pokemon.front_default
     const types = pokemon.types.map(type => type.type.name)
@@ -332,7 +329,7 @@ async function showDetails(pokemon) {
 
     stastDialog.innerHTML = ''
     const detailsTpl =/*html*/`
-    <div class="m-auto animate-visible bg-white rounded-2xl w-5/6 text-center shadow-2xl">
+    <div class="m-auto animate-visible bg-white rounded-2xl w-5/6 overflow-y-auto max-h-[90vh] text-center shadow-2xl">
             <div class="p-5 border-b border-b-(--poke-gray) flex justify-center items-center">
                 <img src="${sprites.other.dream_world.front_default}" alt="ejemplo" class="p-2 size-40">
             </div>
@@ -367,7 +364,7 @@ async function showDetails(pokemon) {
     }).join('')}
                 </div>
 
-                <div class="flex gap-7 justify-center mt-3">
+                <div class="flex justify-between px-4 mt-3">
                     <h2 class="font-bold md:text-xl">Altura: </h2>
                     <h2 class="md:text-xl">${pokemon.height / 10}m</h2>
                     <h2 class="font-bold md:text-xl">Peso: </h2>
@@ -378,7 +375,7 @@ async function showDetails(pokemon) {
 
             <button id="btn-close-stats" class=" p-1 bg-(--poke-yellow) font-bold text-xl rounded text-white hover:bg-yellow-700 mb-5 ">Cerrar</button>
 
-            <div id="evolution-chain" class="p-5 border-t border-t-(--poke-gray) flex-col overflow-auto justify-center w-full items-center gap-10"> 
+            <div id="evolution-chain" class="p-5 border-t border-t-(--poke-gray) flex-col justify-center w-full items-center gap-10"> 
             <h2 class="font-bold md:text-xl p-2" >Cadena de evolución:</h2>
             <div id="evolution-chain-container" class="flex   justify-between lg:w-3/5 m-auto [&_svg]:last:hidden items-center"></div>
             </div>

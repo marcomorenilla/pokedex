@@ -1,14 +1,10 @@
 import { state, typeColors, traduccionTipos, pagination, traduccionStats } from "./shared.js";
+import { getAllPokemon, getPokemonByUrl, getPokemonByName, getTypes, getPokemonByType, getPokemonByFavoriteType, getEvolutionChainByPokemon } from "./api.js";
 
 document.addEventListener('DOMContentLoaded', async function () {
     const searchBtn = document.getElementById('search-btn');
     const searchInput = document.getElementById('search-input');
-    const showAllBtn = document.querySelector('#show-all-btn')
     const trigger = document.querySelector("#scroll-trigger");
-
-
-
-
 
     const observer = new IntersectionObserver((entries) => {
 
@@ -29,8 +25,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     await generateTypes()
     await handleFilter(observer, trigger)
 
-
-
     searchBtn.addEventListener('click', async () => {
         observer.unobserve(trigger)
         console.log('buscando')
@@ -38,42 +32,54 @@ document.addEventListener('DOMContentLoaded', async function () {
         handleLoading()
         await renderUi(await getPokemonByName(searchInput.value), false)
         searchInput.value = ''
-        showAllBtn.classList.remove('hidden')
         console.log('classList', searchBtn.classList)
         state.isLoading = false
         handleLoading()
 
     })
 
-    showAllBtn.addEventListener('click', async () => {
-        observer.observe(trigger)
-        console.log('mostrando todos')
-        pagination.offset = 0
-        state.isLoading = true
-        handleLoading()
-        await renderUi(await getAllPokemon(pagination), false)
-        state.isLoading = false
-        handleLoading()
-        showAllBtn.classList.add('hidden')
-    })
-
-
-
-
-
 })
+
+/**--- UI funciones ---- */
 async function init() {
     state.isLoading = true
     handleLoading()
 
     pagination.offset = 0
 
-    await renderUi(await getAllPokemon(pagination), false)
+    const pokemonData = await getAllPokemon(pagination)
+    for (const pokemon of pokemonData) {
+        const pokemonFullData = await getPokemonByUrl(pokemon.url)
+        await renderUi(pokemonFullData, true)
+        state.fullPokemonList.set(pokemonFullData.id, pokemonFullData)
+        console.log('fullPokemonList', state.fullPokemonList.size)
+    }
+
+
 
 
     state.isLoading = false
     handleLoading()
 }
+
+async function renderUi(pokemonList, append) {
+    console.log('state-is-loading', state.isLoading)
+
+    const gridSection = document.querySelector('#grid-card-section')
+    console.log('append', append)
+    if (!append) {
+        console.log('limpiando')
+        gridSection.innerHTML = ''
+    }
+
+    if (state.requestStatus == 'success') {
+
+        await generateContent(pokemonList)
+    }
+
+}
+
+/** --- Almacenamiento local --- */
 
 function addToLocalStorage(pokemon) {
     state.favorites.push(pokemon.id)
@@ -87,6 +93,8 @@ function removeFromLocalStorage(pokemon) {
     localStorage.setItem('favorites', JSON.stringify(state.favorites))
 }
 
+/** --- Comienzo de handlers --- */
+
 async function handleScroll() {
     if (state.isLoading) return
 
@@ -94,18 +102,36 @@ async function handleScroll() {
     handleLoading()
 
     pagination.offset += pagination.init
+    pagination.init = 12
+
 
     const newPokemon = await getAllPokemon(pagination)
+    for (const pokemon of newPokemon) {
+        const pokemonFullData = await getPokemonByUrl(pokemon.url)
+        await renderUi(
+            pokemonFullData, true)
+        state.fullPokemonList.set(pokemonFullData.id, pokemonFullData)
+        console.log('fullPokemonList', state.fullPokemonList.size)
+    }
 
-    await renderUi(newPokemon, true)
+
 
     state.isLoading = false
     handleLoading()
 }
 
+function handleLoading() {
+    const loadingDialog = document.querySelector('#loading-dialog')
+    if (state.isLoading) {
+        loadingDialog.showModal()
+    } else {
+        loadingDialog.close()
+    }
+}
+
 async function handleFilter(observer, trigger) {
     const btnType = document.querySelectorAll(`.type-btn`)
-    console.log('btnType?? ', btnType)
+
     btnType.forEach(btn => {
         btn.addEventListener('click', async () => {
             observer.unobserve(trigger)
@@ -117,8 +143,10 @@ async function handleFilter(observer, trigger) {
             if (btn.id != 'todos') {
                 handleFilterTypes(btn)
             } else {
-                await renderUi(await getAllPokemon(pagination), false)
+                console.log('mostrando todos', state.fullPokemonList)
+                await renderUi([...state.fullPokemonList.values()], false)
                 state.isLoading = false
+                state.filteredPokemonList.clear()
                 handleLoading()
                 observer.observe(trigger)
             }
@@ -132,11 +160,18 @@ async function handleFilter(observer, trigger) {
 }
 
 async function handleFilterTypes(btn) {
-    const pokemonFiltered = await getPokemonByType(btn.id)
+    let pokemonFiltered
+    if (btn.id === 'favs') {
+        pokemonFiltered = await getPokemonByFavoriteType()
+    } else {
+        pokemonFiltered = await getPokemonByType(btn.id)
+    }
+
     console.log('filtered', pokemonFiltered)
+    console.log('filtered size', pokemonFiltered.size)
 
-    if (pokemonFiltered.length > 0) {
-
+    if (pokemonFiltered.size > 0) {
+        console.log('filtrando por tipo ...', state.filteredPokemonList.size)
         const gridSection = document.querySelector('#grid-card-section')
         gridSection.innerHTML = ''
         pokemonFiltered.forEach(pokemon => {
@@ -157,25 +192,25 @@ async function handleFilterTypes(btn) {
     }
 }
 
+async function handleEvolutionChain(pokemon) {
+    console.log('pokemon in evolution-chain', pokemon)
+    const evolutionChain = await getEvolutionChainByPokemon(pokemon)
+    console.log('evolution chain', evolutionChain)
 
+    const evolutionChainData = new Map()
 
+    evolutionChainData.set('firstEv', state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.species.name))
+    evolutionChainData.set('secondEv', evolutionChain.chain.evolves_to.length > 0 ? state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.evolves_to[0].species.name) : null)
+    evolutionChainData.set('thirdEv', evolutionChain.chain.evolves_to[0].evolves_to.length > 0 ? state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.evolves_to[0].evolves_to[0].species.name) : null)
 
-
-async function renderUi(callback, append) {
-    console.log('state-is-loading', state.isLoading)
-
-    const gridSection = document.querySelector('#grid-card-section')
-    console.log('append', append)
-    if (!append) {
-        console.log('limpiando')
-        gridSection.innerHTML = ''
-    }
-
-    if (state.requestStatus == 'success') {
-        await generateContent(callback)
-    }
-
+    console.log('evolution chain data', evolutionChainData)
+    return evolutionChainData
 }
+
+
+/** --- Fin de handlers --- */
+
+/** -- Generadores de contenido --- */
 
 async function generateTypes() {
     const types = await getTypes()
@@ -191,7 +226,8 @@ async function generateTypes() {
 
     });
     typesSection.insertAdjacentHTML('beforeend', /*html*/`
-        <button id="todos" class="type-btn font-bold bg-(--poke-white) animate-opacidad t p-1 hover:bg-(--poke-dark-gray) hover:text-white  border-3 hover:shadow-lg border-(--poke-gray) text-(--poke-gray) rounded-full">Mostrar todos</button>`)
+        <button id="favs" class="type-btn font-bold bg-(--poke-white) animate-opacidad  p-1 hover:bg-(--poke-red) hover:text-white  border-3 hover:shadow-lg border-(--poke-red) text-(--poke-red) rounded-full">Favoritos</button>
+        <button id="todos" class="type-btn font-bold bg-(--poke-white) animate-opacidad p-1 hover:bg-(--poke-dark-gray) hover:text-white  border-3 hover:shadow-lg border-(--poke-gray) text-(--poke-gray) rounded-full">Mostrar todos</button>`)
 
 
     await init()
@@ -201,19 +237,17 @@ async function generateTypes() {
 
 
 
-async function generateContent(callback) {
+async function generateContent(pokemonList) {
 
-    state.pokemonList = callback
 
-    if (state.pokemonList && state.pokemonList.length > 0) {
+    if (pokemonList && pokemonList.length > 0) {
 
-        for (const pokemonRaw of state.pokemonList) {
-            const pokemon = await getPokemonByUrl(pokemonRaw.url)
-            generateDataList(pokemon)
-            generateCard(pokemon)
+        for (const pokemonRaw of pokemonList) {
+            generateDataList(pokemonRaw)
+            generateCard(pokemonRaw)
         }
     } else if (state.requestStatus == 'success') {
-        generateCard(state.pokemonList)
+        generateCard(pokemonList)
     }
 
 
@@ -235,7 +269,7 @@ function generateCard(pokemon) {
 
 
     const cartTpl = /*html */`
-    <article  class="rounded-lg animate-opacidad overflow-hidden shadow-sm hover:shadow-lg">
+    <article  class="rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white) overflow-hidden shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
         <div id="card-${pokemon.id}"class="flex relative w-auto h-auto flex-col  items-center">
             <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
                 <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-30 z-1">
@@ -256,7 +290,7 @@ function generateCard(pokemon) {
 
             </div>
         </div>
-        <div class="flex justify-between bg-(--poke-yellow) p-1">
+        <div class="flex justify-between bg-linear-to-r from-(--poke-yellow) to-(--poke-white) p-1">
             <section id="number-container" class="px-3">
                 <h2 class="font-bold text-lg">#${String(pokemon.id).padStart(3, '0')}</h2>
             </section>
@@ -293,23 +327,22 @@ function generateCard(pokemon) {
         if (!esFavorito) {
             addToLocalStorage(pokemon)
             pathCorazon.setAttribute('fill', '#cc0000');
-            pathCorazon.setAttribute('stroke', '#cc0000');
             corazonSvg.style.transform = "scale(1.2)";
             setTimeout(() => corazonSvg.style.transform = "scale(1)", 100);
 
         } else {
             removeFromLocalStorage(pokemon)
             pathCorazon.setAttribute('fill', 'none');
-            pathCorazon.setAttribute('stroke', '#cc0000');
         }
     });
 
-    showMore.addEventListener('click', () => showDetails(pokemon))
+
+    showMore.addEventListener('click', async () => await showDetails(pokemon))
 
 }
 
 
-function showDetails(pokemon) {
+async function showDetails(pokemon) {
     const stastDialog = document.querySelector('#pokemon-stats')
     const sprites = pokemon.sprites ? pokemon.sprites : pokemon.front_default
     const types = pokemon.types.map(type => type.type.name)
@@ -317,7 +350,7 @@ function showDetails(pokemon) {
 
     stastDialog.innerHTML = ''
     const detailsTpl =/*html*/`
-    <div class="text-center animate-visible bg-white rounded-2xl w-full shadow-2xl w-auto">
+    <div class="m-auto animate-visible bg-white rounded-2xl w-5/6 text-center shadow-2xl">
             <div class="p-5 border-b border-b-(--poke-gray) flex justify-center items-center">
                 <img src="${sprites.other.dream_world.front_default}" alt="ejemplo" class="p-2 size-40">
             </div>
@@ -326,7 +359,7 @@ function showDetails(pokemon) {
                 <h2 class="font-bold md:text-4xl">${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</h2>
                 <h2 class="font-semi-bold md:text-3xl">#${String(pokemon.id).padStart(3, '0')}</h2>
 
-                <div id="pokemon-stats-types" class="mt-3 flex justify-center items-center gap-1 md:text-2xl">
+                <div id="pokemon-stats-types" class="mt-3 flex justify-center items-center font-bold gap-1 ">
                     ${types.map(type => {
         console.log('tipo', type)
         return `<span class="bg-[var(${typeColors[type]})] text-white p-1 rounded-full">${traduccionTipos[type]}</span>`
@@ -341,11 +374,11 @@ function showDetails(pokemon) {
         if (stat.base_stat < 30) color = "bg-red-500"
         else if (stat.base_stat < 50) color = "bg-yellow-500"
 
-        return `<div class="grid grid-cols-2 gap-2 w-48 md:w-96 items-center content-start">
+        return `<div class="grid grid-cols-2 gap-1 w-48 md:w-96 items-center content-start">
                     
-                    <h2 class="md:text-xl text-start font-medium">${traduccionStats[stat.stat.name]}</h2>
+                    <h2 class="md:text-lg text-start font-medium">${traduccionStats[stat.stat.name]}</h2>
 
-                        <div class="w-full  border bg-gray-200 rounded-full h-4 overflow-hidden">
+                        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                         <div class="${color} animate-stat h-full rounded-full w-[${stat.base_stat}%]">
                         </div>
                     </div>
@@ -353,20 +386,46 @@ function showDetails(pokemon) {
     }).join('')}
                 </div>
 
-                <div class="flex gap-7 justify-center mt-10">
-                    <h2 class="font-bold md:text-3xl">Altura: </h2>
-                    <h2 class="md:text-3xl">${pokemon.height / 10}m</h2>
-                    <h2 class="font-bold md:text-3xl">Peso: </h2>
-                    <h2 class="md:text-3xl">${pokemon.weight / 10}kg</h2>
+                <div class="flex gap-7 justify-center mt-3">
+                    <h2 class="font-bold md:text-xl">Altura: </h2>
+                    <h2 class="md:text-xl">${pokemon.height / 10}m</h2>
+                    <h2 class="font-bold md:text-xl">Peso: </h2>
+                    <h2 class="md:text-xl">${pokemon.weight / 10}kg</h2>
                 </div>
     
-            </div>   
+            </div>  
 
-            <button id="btn-close-stats" class=" p-1 bg-(--poke-yellow) font-bold text-xl rounded text-white hover:bg-yellow-700 mb-20 ">Cerrar</button>
+            <button id="btn-close-stats" class=" p-1 bg-(--poke-yellow) font-bold text-xl rounded text-white hover:bg-yellow-700 mb-5 ">Cerrar</button>
+
+            <div id="evolution-chain" class="p-5 border-t border-t-(--poke-gray) flex-col  justify-center w-full items-center gap-10"> 
+            <h2 class="font-bold md:text-xl p-2" >Cadena de evolución:</h2>
+            <div id="evolution-chain-container" class="flex  justify-between lg:w-3/5 m-auto  items-center"></div>
+            </div>
         </div>
     `
+
+
     stastDialog.insertAdjacentHTML('beforeend', detailsTpl)
     stastDialog.classList.toggle('hidden')
+
+    const divEvolutionChain = document.querySelector('#evolution-chain-container')
+
+    const evolutionChainData = await handleEvolutionChain(pokemon)
+    console.log('evolution chain data en show', evolutionChainData)
+
+
+    for (const [key, pokemonEv] of evolutionChainData) {
+        if (pokemonEv && key != 'thirdEv') {
+            divEvolutionChain.insertAdjacentHTML('beforeend', generateEvolutionChain(pokemonEv))
+            divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5L16 12L8 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`)
+        }else if(pokemonEv && key === 'thirdEv'){
+            divEvolutionChain.insertAdjacentHTML('beforeend', generateEvolutionChain(pokemonEv))
+        }else{
+            divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<h2 class="font-bold text-lg">No tiene evolución</h2>`)
+        }
+    }
 
     stastDialog.addEventListener('click', (e) => {
         if (!stastDialog.classList.contains('hidden')) {
@@ -386,125 +445,19 @@ function showDetails(pokemon) {
 }
 
 
+function generateEvolutionChain(pokemon) {
+    const evolutionChainTpl = /*html*/` 
+    <div class="flex justify-between gap-5  items-center">
+        <img src="${pokemon.sprites.other.dream_world.front_default}" alt="ejemplo" class="size-15 md:size-30">
+    </div>`
 
-
-async function getAllPokemon(pagination) {
-    const url = `https://pokeapi.co/api/v2/pokemon?limit=${pagination.init}&offset=${pagination.offset}`
-    console.log('url', url)
-
-
-    try {
-        const request = await fetch(url)
-
-        if (request.ok) {
-            state.requestStatus = 'success'
-            const response = await request.json()
-            return response.results.sort((a, b) => a.id - b.id)
-        } else {
-            state.requestStatus = 'error'
-            throw (new Error(`Algo ha fallado - ${request.status} -${request.text()}`))
-        }
-
-    } catch (Error) {
-        console.log(Error)
-    }
-
-}
-
-async function getPokemonByUrl(url) {
-
-    try {
-        const request = await fetch(url)
-        if (request.ok) {
-            state.requestStatus = 'success'
-            const response = await request.json()
-
-            return response
-        } else {
-            state.requestStatus = 'error'
-            throw (new Error(`Algo ha fallado - ${request.status} -${request.text()}`))
-        }
-    } catch (Error) {
-        console.log(Error)
-    }
-
-}
-
-async function getPokemonByName(name) {
-    const url = `https://pokeapi.co/api/v2/pokemon/${name.toLowerCase().trim()}`
-    console.log('url', url)
-
-
-    try {
-        const request = await fetch(url)
-
-        if (request.ok) {
-            state.requestStatus = 'success'
-            const response = await request.json()
-            console.log('request', request.status)
-            console.log('response ', response)
-            return response
-
-        } else {
-            state.requestStatus = 'error'
-            throw (new Error(`Algo ha fallado - ${request.status} -${request.json()}`))
-
-
-        }
-    } catch (Error) {
-        const noContentDialog = document.querySelector('#no-content-dialog')
-        const noContentDialogBtn = document.querySelector('.no-content-dialog-btn')
-        noContentDialog.showModal()
-
-        noContentDialogBtn.addEventListener('click', () => {
-            noContentDialog.close()
-        })
-        console.log(Error.message)
-
-    }
-}
-
-async function getPokemonByType(type) {
-
-
-    let pokeList = []
-
-    for (const pokemon of state.pokemonList) {
-        pokeList.push(await getPokemonByUrl(pokemon.url))
-
-    }
-    console.log('pokemon', pokeList)
-
-    return pokeList.filter(pokemon => pokemon.types.map(type => type.type.name).includes(type))
+    return evolutionChainTpl
 }
 
 
 
-async function getTypes() {
-    const url = `https://pokeapi.co/api/v2/type`
-
-    try {
-        const request = await fetch(url)
 
 
-        if (request.ok) {
-            const response = await request.json()
-            return response.results
-
-        } else {
-            throw new Error(`Algo ha fallado - ${request.status} -${request.text()}`)
-        }
-    } catch (error) {
-        console.log(error)
-    }
-}
 
 
-function handleLoading() {
-    const loadingDialog = document.querySelector('#loading-dialog')
-    if (state.isLoading) {
-        loadingDialog.showModal()
-    } else {
-        loadingDialog.close()
-    }
-}
+

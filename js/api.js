@@ -1,0 +1,169 @@
+import { state} from "./shared.js";
+
+export async function getAllPokemon(pagination) {
+    const url = `https://pokeapi.co/api/v2/pokemon?limit=${pagination.init}&offset=${pagination.offset}`
+    console.log('url', url)
+    console.log('tipo fullPokemonList',typeof(state.fullPokemonList))
+
+    try {
+        const request = await fetch(url)
+
+        if (request.ok) {
+            state.requestStatus = 'success'
+            const response = await request.json()
+            console.log('response', response)
+            return response.results.sort((a, b) => a.id - b.id)
+        } else {
+            state.requestStatus = 'error'
+            throw (new Error(`Algo ha fallado - ${request.status} -${request.text()}`))
+        }
+
+    } catch (Error) {
+        console.log(Error)
+    }
+
+}
+
+export async function getPokemonByUrl(url) {
+
+    try {
+        const request = await fetch(url)
+        if (request.ok) {
+            state.requestStatus = 'success'
+            const response = await request.json()
+            return response
+        } else {
+            state.requestStatus = 'error'
+            throw (new Error(`Algo ha fallado - ${request.status} -${request.text()}`))
+        }
+    } catch (Error) {
+        console.log(Error)
+    }
+
+}
+
+export async function getPokemonByName(name) {
+    const url = `https://pokeapi.co/api/v2/pokemon/${name.toLowerCase().trim()}`
+    console.log('url', url)
+
+
+    try {
+        const request = await fetch(url)
+
+        if (request.ok) {
+            state.requestStatus = 'success'
+            const response = await request.json()
+            console.log('request', request.status)
+            console.log('response ', response)
+            return response
+
+        } else {
+            state.requestStatus = 'error'
+            throw (new Error(`Algo ha fallado - ${request.status} -${request.json()}`))
+
+
+        }
+    } catch (Error) {
+        const noContentDialog = document.querySelector('#no-content-dialog')
+        const noContentDialogBtn = document.querySelector('.no-content-dialog-btn')
+        noContentDialog.showModal()
+
+        noContentDialogBtn.addEventListener('click', () => {
+            noContentDialog.close()
+        })
+        console.log(Error.message)
+
+    }
+}
+
+export async function getPokemonByType(type) {
+
+    
+    if (state.fullPokemonList.size > 0 && state.filteredPokemonList.size === 0) {
+        console.log('filtrando...', state.filteredPokemonList.size)
+        for (const pokemon of state.fullPokemonList.values()) {
+            if (pokemon.types.map(type => type.type.name).includes(type)) {
+                state.filteredPokemonList.set(pokemon.id, pokemon)
+            }
+        }
+    } else if (state.filteredPokemonList.size > 0 ) {
+        for (const pokemon of state.filteredPokemonList.values()) {
+            if (!pokemon.types.map(type => type.type.name).includes(type)) {
+                state.filteredPokemonList.delete(pokemon.id)
+            }
+        }
+    }
+    return state.filteredPokemonList
+}
+
+export async function getPokemonByFavoriteType() {
+
+    if(state.fullPokemonList.size > 0 && state.filteredPokemonList.size === 0) {
+        console.log('filtrando por favoritos...', state.filteredPokemonList.size)
+        for (const pokemon of state.fullPokemonList.values()) {
+            if (state.favorites.includes(pokemon.id)) {
+                state.filteredPokemonList.set(pokemon.id, pokemon)
+            }
+        }
+    } else if (state.filteredPokemonList.size > 0 ) {
+        for (const pokemon of state.filteredPokemonList.values()) {
+            if (!state.favorites.includes(pokemon.id)) {
+                state.filteredPokemonList.delete(pokemon.id)
+            }
+        }
+    }
+    return state.filteredPokemonList
+}
+
+
+export async function getTypes() {
+    const url = `https://pokeapi.co/api/v2/type`
+
+    try {
+        const request = await fetch(url)
+
+
+        if (request.ok) {
+            const response = await request.json()
+            return response.results
+
+        } else {
+            throw new Error(`Algo ha fallado - ${request.status} -${request.text()}`)
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export async function getPokemonSpecieByPokemon(pokemon){
+
+    try {
+        const request = await fetch(pokemon.species.url)
+        if (request.ok) {
+            const response = await request.json()
+            return response
+        } else {
+            throw new Error(`Algo ha fallado - ${request.status} -${request.text()}`)
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export async function getEvolutionChainByPokemon(pokemon) {
+    const specie = await getPokemonSpecieByPokemon(pokemon)
+    const url = specie.evolution_chain.url
+    
+    try {
+        const request = await fetch(url)
+        if (request.ok) {
+            const response = await request.json()
+            console.log('evolution chain response', response)
+            return response
+        } else {
+            throw new Error(`Algo ha fallado - ${request.status} -${request.text()}`)
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}

@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         const entry = entries[0];
 
         if (entry.isIntersecting) {
-            console.log('observando scroll')
             handleScroll()
         }
 
@@ -27,12 +26,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     searchBtn.addEventListener('click', async () => {
         observer.unobserve(trigger)
-        console.log('buscando')
         state.isLoading = true
         handleLoading()
         await renderUi(await getPokemonByName(searchInput.value), false)
         searchInput.value = ''
-        console.log('classList', searchBtn.classList)
         state.isLoading = false
         handleLoading()
 
@@ -52,7 +49,6 @@ async function init() {
         const pokemonFullData = await getPokemonByUrl(pokemon.url)
         await renderUi(pokemonFullData, true)
         state.fullPokemonList.set(pokemonFullData.id, pokemonFullData)
-        console.log('fullPokemonList', state.fullPokemonList.size)
     }
 
 
@@ -63,12 +59,9 @@ async function init() {
 }
 
 async function renderUi(pokemonList, append) {
-    console.log('state-is-loading', state.isLoading)
 
     const gridSection = document.querySelector('#grid-card-section')
-    console.log('append', append)
     if (!append) {
-        console.log('limpiando')
         gridSection.innerHTML = ''
     }
 
@@ -87,9 +80,7 @@ function addToLocalStorage(pokemon) {
 }
 
 function removeFromLocalStorage(pokemon) {
-    console.log('pokemon id', pokemon.id)
     state.favorites = state.favorites.filter(id => pokemon.id != id)
-    console.log('Estado modificado', state.favorites)
     localStorage.setItem('favorites', JSON.stringify(state.favorites))
 }
 
@@ -111,7 +102,6 @@ async function handleScroll() {
         await renderUi(
             pokemonFullData, true)
         state.fullPokemonList.set(pokemonFullData.id, pokemonFullData)
-        console.log('fullPokemonList', state.fullPokemonList.size)
     }
 
 
@@ -138,12 +128,10 @@ async function handleFilter(observer, trigger) {
             pagination.offset = 0
             state.isLoading = true
             handleLoading()
-            console.log('type to seach', btn.id)
 
             if (btn.id != 'todos') {
                 handleFilterTypes(btn)
             } else {
-                console.log('mostrando todos', state.fullPokemonList)
                 await renderUi([...state.fullPokemonList.values()], false)
                 state.isLoading = false
                 state.filteredPokemonList.clear()
@@ -167,11 +155,7 @@ async function handleFilterTypes(btn) {
         pokemonFiltered = await getPokemonByType(btn.id)
     }
 
-    console.log('filtered', pokemonFiltered)
-    console.log('filtered size', pokemonFiltered.size)
-
     if (pokemonFiltered.size > 0) {
-        console.log('filtrando por tipo ...', state.filteredPokemonList.size)
         const gridSection = document.querySelector('#grid-card-section')
         gridSection.innerHTML = ''
         pokemonFiltered.forEach(pokemon => {
@@ -193,17 +177,17 @@ async function handleFilterTypes(btn) {
 }
 
 async function handleEvolutionChain(pokemon) {
-    console.log('pokemon in evolution-chain', pokemon)
     const evolutionChain = await getEvolutionChainByPokemon(pokemon)
-    console.log('evolution chain', evolutionChain)
+
 
     const evolutionChainData = new Map()
 
-    evolutionChainData.set('firstEv', state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.species.name))
-    evolutionChainData.set('secondEv', evolutionChain.chain.evolves_to.length > 0 ? state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.evolves_to[0].species.name) : null)
-    evolutionChainData.set('thirdEv', evolutionChain.chain.evolves_to[0].evolves_to.length > 0 ? state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.evolves_to[0].evolves_to[0].species.name) : null)
+    if (evolutionChain.chain.evolves_to.length > 0) {
+        evolutionChainData.set('firstEv', state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.species.name))
+        evolutionChainData.set('secondEv', evolutionChain.chain.evolves_to.length > 0 ? state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.evolves_to[0].species.name) : null)
+        evolutionChainData.set('thirdEv', evolutionChain.chain.evolves_to[0].evolves_to.length > 0 ? state.fullPokemonList.values().find(poke => poke.name === evolutionChain.chain.evolves_to[0].evolves_to[0].species.name) : null)
+    }
 
-    console.log('evolution chain data', evolutionChainData)
     return evolutionChainData
 }
 
@@ -214,7 +198,6 @@ async function handleEvolutionChain(pokemon) {
 
 async function generateTypes() {
     const types = await getTypes()
-    console.log('tipos', types)
     const typesSection = document.querySelector('#types-section')
 
     types.forEach(type => {
@@ -282,7 +265,6 @@ function generateCard(pokemon) {
                 </section>
                 <section id="type-container" class="flex font-bold justify-center gap-1">
                                     ${types.map(type => {
-        console.log('tipo', type)
         return `<span class="bg-[var(${typeColors[type]})] text-white p-1 rounded-full">${traduccionTipos[type]}</span>`
 
     }).join('')}
@@ -361,7 +343,6 @@ async function showDetails(pokemon) {
 
                 <div id="pokemon-stats-types" class="mt-3 flex justify-center items-center font-bold gap-1 ">
                     ${types.map(type => {
-        console.log('tipo', type)
         return `<span class="bg-[var(${typeColors[type]})] text-white p-1 rounded-full">${traduccionTipos[type]}</span>`
     }).join('')}
                 </div>
@@ -374,11 +355,11 @@ async function showDetails(pokemon) {
         if (stat.base_stat < 30) color = "bg-red-500"
         else if (stat.base_stat < 50) color = "bg-yellow-500"
 
-        return `<div class="grid grid-cols-2 gap-1 w-48 md:w-96 items-center content-start">
+        return `<div class="leading-none grid grid-cols-2 gap-1 w-48 md:w-96 items-center content-start">
                     
                     <h2 class="md:text-lg text-start font-medium">${traduccionStats[stat.stat.name]}</h2>
 
-                        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                        <div class="w-full bg-gray-200 rounded-full h-4">
                         <div class="${color} animate-stat h-full rounded-full w-[${stat.base_stat}%]">
                         </div>
                     </div>
@@ -397,9 +378,9 @@ async function showDetails(pokemon) {
 
             <button id="btn-close-stats" class=" p-1 bg-(--poke-yellow) font-bold text-xl rounded text-white hover:bg-yellow-700 mb-5 ">Cerrar</button>
 
-            <div id="evolution-chain" class="p-5 border-t border-t-(--poke-gray) flex-col  justify-center w-full items-center gap-10"> 
+            <div id="evolution-chain" class="p-5 border-t border-t-(--poke-gray) flex-col overflow-auto justify-center w-full items-center gap-10"> 
             <h2 class="font-bold md:text-xl p-2" >Cadena de evolución:</h2>
-            <div id="evolution-chain-container" class="flex  justify-between lg:w-3/5 m-auto  items-center"></div>
+            <div id="evolution-chain-container" class="flex   justify-between lg:w-3/5 m-auto [&_svg]:last:hidden items-center"></div>
             </div>
         </div>
     `
@@ -407,36 +388,46 @@ async function showDetails(pokemon) {
 
     stastDialog.insertAdjacentHTML('beforeend', detailsTpl)
     stastDialog.classList.toggle('hidden')
+    document.querySelector('body').classList.add('overflow-hidden')
 
     const divEvolutionChain = document.querySelector('#evolution-chain-container')
 
     const evolutionChainData = await handleEvolutionChain(pokemon)
-    console.log('evolution chain data en show', evolutionChainData)
 
 
     for (const [key, pokemonEv] of evolutionChainData) {
-        if (pokemonEv && key != 'thirdEv') {
+        if (pokemonEv) {
             divEvolutionChain.insertAdjacentHTML('beforeend', generateEvolutionChain(pokemonEv))
             divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 5L16 12L8 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>`)
-        }else if(pokemonEv && key === 'thirdEv'){
-            divEvolutionChain.insertAdjacentHTML('beforeend', generateEvolutionChain(pokemonEv))
-        }else{
-            divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<h2 class="font-bold text-lg">No tiene evolución</h2>`)
+
+
         }
     }
 
+    if (evolutionChainData.size === 0) {
+        divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<h2 class="font-bold md:text-lg">Este Pokémon no tiene evolución</h2>`)
+    }
+
+
+
     stastDialog.addEventListener('click', (e) => {
+
         if (!stastDialog.classList.contains('hidden')) {
             stastDialog.classList.toggle('hidden')
+            document.querySelector('body').classList.remove('overflow-hidden')
         }
     })
 
 
     const closeBtn = document.querySelector('#btn-close-stats')
 
-    closeBtn.addEventListener('click', () => stastDialog.classList.toggle('hidden'))
+    closeBtn.addEventListener('click', () => {
+        stastDialog.classList.toggle('hidden')
+        document.querySelector('body').classList.remove('overflow-hidden')
+
+    })
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !stastDialog.classList.contains('hidden')) stastDialog.classList.toggle('hidden')

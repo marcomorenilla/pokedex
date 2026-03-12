@@ -2,8 +2,6 @@ import { state} from "./shared.js";
 
 export async function getAllPokemon(pagination) {
     const url = `https://pokeapi.co/api/v2/pokemon?limit=${pagination.init}&offset=${pagination.offset}`
-    console.log('url', url)
-    console.log('tipo fullPokemonList',typeof(state.fullPokemonList))
 
     try {
         const request = await fetch(url)
@@ -11,15 +9,14 @@ export async function getAllPokemon(pagination) {
         if (request.ok) {
             state.requestStatus = 'success'
             const response = await request.json()
-            console.log('response', response)
             return response.results.sort((a, b) => a.id - b.id)
         } else {
             state.requestStatus = 'error'
             throw (new Error(`Algo ha fallado - ${request.status} -${request.text()}`))
         }
 
-    } catch (Error) {
-        console.log(Error)
+    } catch (error) {
+        console.log(error)
     }
 
 }
@@ -36,16 +33,14 @@ export async function getPokemonByUrl(url) {
             state.requestStatus = 'error'
             throw (new Error(`Algo ha fallado - ${request.status} -${request.text()}`))
         }
-    } catch (Error) {
-        console.log(Error)
+    } catch (error) {
+        console.log(error)
     }
 
 }
 
 export async function getPokemonByName(name) {
     const url = `https://pokeapi.co/api/v2/pokemon/${name.toLowerCase().trim()}`
-    console.log('url', url)
-
 
     try {
         const request = await fetch(url)
@@ -53,8 +48,6 @@ export async function getPokemonByName(name) {
         if (request.ok) {
             state.requestStatus = 'success'
             const response = await request.json()
-            console.log('request', request.status)
-            console.log('response ', response)
             return response
 
         } else {
@@ -63,7 +56,7 @@ export async function getPokemonByName(name) {
 
 
         }
-    } catch (Error) {
+    } catch (error) {
         const noContentDialog = document.querySelector('#no-content-dialog')
         const noContentDialogBtn = document.querySelector('.no-content-dialog-btn')
         noContentDialog.showModal()
@@ -71,7 +64,7 @@ export async function getPokemonByName(name) {
         noContentDialogBtn.addEventListener('click', () => {
             noContentDialog.close()
         })
-        console.log(Error.message)
+        console.log(error)
 
     }
 }
@@ -80,7 +73,6 @@ export async function getPokemonByType(type) {
 
     
     if (state.fullPokemonList.size > 0 && state.filteredPokemonList.size === 0) {
-        console.log('filtrando...', state.filteredPokemonList.size)
         for (const pokemon of state.fullPokemonList.values()) {
             if (pokemon.types.map(type => type.type.name).includes(type)) {
                 state.filteredPokemonList.set(pokemon.id, pokemon)
@@ -99,7 +91,6 @@ export async function getPokemonByType(type) {
 export async function getPokemonByFavoriteType() {
 
     if(state.fullPokemonList.size > 0 && state.filteredPokemonList.size === 0) {
-        console.log('filtrando por favoritos...', state.filteredPokemonList.size)
         for (const pokemon of state.fullPokemonList.values()) {
             if (state.favorites.includes(pokemon.id)) {
                 state.filteredPokemonList.set(pokemon.id, pokemon)
@@ -158,7 +149,6 @@ export async function getEvolutionChainByPokemon(pokemon) {
         const request = await fetch(url)
         if (request.ok) {
             const response = await request.json()
-            console.log('evolution chain response', response)
             return response
         } else {
             throw new Error(`Algo ha fallado - ${request.status} -${request.text()}`)

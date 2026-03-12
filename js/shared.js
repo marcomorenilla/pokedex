@@ -25,7 +25,9 @@ export const state = {
     isLoading: true,
     pokemonList: [],
     favorites: JSON.parse(localStorage.getItem('favorites')) || [],
-    requestStatus: ''
+    requestStatus: '',
+    fullPokemonList: new Map(),
+    filteredPokemonList: new Map()
 }
 
 export const traduccionTipos = {
@@ -62,5 +64,5 @@ export const traduccionStats = {
 
 export const pagination = {
     init: 151,
-    offset: 0,
+    offset:12
 }

@@ -10,9 +10,9 @@
     <link rel="shortcut icon" href="assets/console-1.svg" type="image/x-icon">
 </head>
 
-<body class="roboto bg-[var(--poke-white)]">
+<body class="roboto bg-(--poke-white)">
     <nav
-        class="shadow-lg  bg-(--poke-yellow) rounded-sm md:rounded-b-2xl shadow- flex flex-col gap-5 justify-between items-start md:items-center p-10 w-full">
+        class="shadow-lg  bg-linear-to-r from-(--poke-yellow) to-(--poke-orange) rounded-sm md:rounded-b-2xl shadow- flex flex-col gap-5 justify-between items-start md:items-center p-10 w-full">
         <div class="flex gap-5 items-center justify-between">
             <img src="assets/logo.png" alt="pokemon logo" class="hidden md:block  size-15 md:size-20">
             <h1 class="text-[var(--poke-white)] font-bold text-5xl text-shadow-lg text-shadow-(--poke-blue)">Pokédex
@@ -43,9 +43,6 @@
         <section id="types-section" class="flex mt-2 p-3 md:w-3/6 flex-wrap gap-2"></section>
         <div id="grid-card-section" class="p-3 mt-2 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-3"></div>
 
-        <button id="show-all-btn"
-            class=" hidden border rounded-full bg-(--poke-yellow) text-(--poke-blue) hover:bg-yellow-700 font-bold p-1 size-fit">Mostrar
-            todos</button>
 
         <div>
             <div id="scroll-trigger"></div>
@@ -80,7 +77,7 @@
     </dialog>
 
     <div id="pokemon-stats"
-        class="fixed inset-0 hidden p-2 z-2  bg-yellow-500/50 backdrop-blur-sm flex items-center justify-end">
+        class="fixed inset-0 flex items-center justify-center hidden p-2 z-2  bg-yellow-500/50 backdrop-blur-sm ">
 
     </div>
 

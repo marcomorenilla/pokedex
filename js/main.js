@@ -110,9 +110,16 @@ async function handleScroll() {
 
 function handleLoading() {
     const loadingDialog = document.querySelector('#loading-dialog')
+    const dots = document.querySelectorAll('.dots')
     if (state.isLoading) {
+        dots.forEach((dot, index) => {
+            setTimeout(() => {
+                dot.classList.add('animate-dots');
+            }, index * 200); 
+        });
         loadingDialog.showModal()
     } else {
+        dots.forEach(dot => dot.classList.remove('animate-dots'))
         loadingDialog.close()
     }
 }

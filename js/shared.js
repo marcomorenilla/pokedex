@@ -51,8 +51,16 @@ export const traduccionTipos = {
     unknown: "desconocido"
 };
 
+export const traduccionStats = {
+    'hp': 'Salud',
+    'attack': 'Ataque',
+    'defense': 'Defensa',
+    'special-attack': 'At-especial',
+    'special-defense': 'Def-especial',
+    'speed': 'Velocidad'
+}
 
 export const pagination = {
-    init: 18,
+    init: 151,
     offset: 0,
 }

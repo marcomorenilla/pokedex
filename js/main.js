@@ -1,4 +1,4 @@
-import { state, typeColors, traduccionTipos, pagination } from "./shared.js";
+import { state, typeColors, traduccionTipos, pagination, traduccionStats } from "./shared.js";
 
 document.addEventListener('DOMContentLoaded', async function () {
     const searchBtn = document.getElementById('search-btn');
@@ -75,6 +75,17 @@ async function init() {
     handleLoading()
 }
 
+function addToLocalStorage(pokemon) {
+    state.favorites.push(pokemon.id)
+    localStorage.setItem('favorites', JSON.stringify(state.favorites))
+}
+
+function removeFromLocalStorage(pokemon) {
+    console.log('pokemon id', pokemon.id)
+    state.favorites = state.favorites.filter(id => pokemon.id != id)
+    console.log('Estado modificado', state.favorites)
+    localStorage.setItem('favorites', JSON.stringify(state.favorites))
+}
 
 async function handleScroll() {
     if (state.isLoading) return
@@ -181,7 +192,7 @@ async function generateTypes() {
     });
     typesSection.insertAdjacentHTML('beforeend', /*html*/`
         <button id="todos" class="type-btn font-bold bg-(--poke-white) animate-opacidad t p-1 hover:bg-(--poke-dark-gray) hover:text-white  border-3 hover:shadow-lg border-(--poke-gray) text-(--poke-gray) rounded-full">Mostrar todos</button>`)
-        
+
 
     await init()
 
@@ -225,19 +236,15 @@ function generateCard(pokemon) {
 
     const cartTpl = /*html */`
     <article  class="rounded-lg animate-opacidad overflow-hidden shadow-sm hover:shadow-lg">
-        <div id="card-${pokemon.id}"class="flex w-auto h-auto flex-col  items-center">
+        <div id="card-${pokemon.id}"class="flex relative w-auto h-auto flex-col  items-center">
             <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
-                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-30">
+                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-30 z-1">
             </section>
 
             <div class="p-2">
-                <section id="number-container" class="flex gap-1">
-                    <h2 class="font-bold">Número:</h2>
-                    <h2>#${String(pokemon.id).padStart(3, '0')}</h2>
-                </section>
-                <section id="name-container" class="flex gap-1">
-                    <h2 class="font-bold">Nombre:</h2>
-                    <h2>${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</h2>
+
+                <section id="name-container" class="flex justify-center gap-1">
+                    <h2 class="font-bold text-xl">${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</h2>
                 </section>
                 <section id="type-container" class="flex font-bold justify-center gap-1">
                                     ${types.map(type => {
@@ -249,7 +256,10 @@ function generateCard(pokemon) {
 
             </div>
         </div>
-        <div class="flex justify-end bg-(--poke-yellow) p-1">
+        <div class="flex justify-between bg-(--poke-yellow) p-1">
+            <section id="number-container" class="px-3">
+                <h2 class="font-bold text-lg">#${String(pokemon.id).padStart(3, '0')}</h2>
+            </section>
             <svg 
                 id="heart-${pokemon.id}" 
                 width="20px" 
@@ -298,17 +308,6 @@ function generateCard(pokemon) {
 
 }
 
-function addToLocalStorage(pokemon) {
-    state.favorites.push(pokemon.id)
-    localStorage.setItem('favorites', JSON.stringify(state.favorites))
-}
-
-function removeFromLocalStorage(pokemon) {
-    console.log('pokemon id', pokemon.id)
-    state.favorites = state.favorites.filter(id => pokemon.id != id)
-    console.log('Estado modificado', state.favorites)
-    localStorage.setItem('favorites', JSON.stringify(state.favorites))
-}
 
 function showDetails(pokemon) {
     const stastDialog = document.querySelector('#pokemon-stats')
@@ -344,7 +343,7 @@ function showDetails(pokemon) {
 
         return `<div class="grid grid-cols-2 gap-2 w-48 md:w-96 items-center content-start">
                     
-                    <h2 class="md:text-xl text-start font-medium">${stat.stat.name}</h2>
+                    <h2 class="md:text-xl text-start font-medium">${traduccionStats[stat.stat.name]}</h2>
 
                         <div class="w-full  border bg-gray-200 rounded-full h-4 overflow-hidden">
                         <div class="${color} animate-stat h-full rounded-full w-[${stat.base_stat}%]">

@@ -10,18 +10,8 @@ export async function renderUi(data, actions) {
         gridSection.innerHTML = ''
     }
 
-    if (data.pokemonList && data.pokemonList.length > 0) {
-
-        for (const pokemonRaw of data.pokemonList) {
-            renderDataList(pokemonRaw)
-            renderCard(pokemonRaw, actions)
-        }
-    } else {
-        renderCard(data.pokemonList, actions)
-    }
-
-
-
+    renderDataList(data.pokemon)
+    renderCard(data.pokemon, actions)
 
 }
 

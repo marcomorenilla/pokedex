@@ -23,7 +23,8 @@ export function renderTypes(types) {
         const typeTpl = /*html*/`
         <button id="${type.name}" class="type-btn font-bold bg-[var(${typeColors[type.name]})] animate-opacidad text-white p-1 hover:bg-white hover:border-3 hover:shadow-lg hover:border-[var(${typeColors[type.name]})] hover:text-[var(${typeColors[type.name]})] rounded-full">${traduccionTipos[type.name]}</button>
         `
-        typesSection.insertAdjacentHTML('beforeend', typeTpl)
+        const typeBtn = renderBadgeType(type.name, typeTpl)
+        typesSection.insertAdjacentHTML('beforeend', typeBtn)
 
     });
     typesSection.insertAdjacentHTML('beforeend', /*html*/`
@@ -34,7 +35,7 @@ export function renderTypes(types) {
 
 
 
-export function renderDataList(pokemon) {
+function renderDataList(pokemon) {
     const dataList = document.querySelector('#pokemon-list')
     const optionTpl = `<option value=${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}></option>`
     dataList.insertAdjacentHTML('beforeend', optionTpl)
@@ -57,6 +58,8 @@ export function renderCard(pokemon, actions) {
 
     const isFavorite = onIsFavorite(pokemon)
 
+
+
     const cartTpl = /*html */`
     <article  class="rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white)  shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
         <div id="card-${pokemon.id}"class="flex relative w-auto h-auto flex-col  items-center">
@@ -71,11 +74,10 @@ export function renderCard(pokemon, actions) {
                 </section>
                 <section id="type-container" class="flex font-bold justify-center gap-1">
                                     ${types.map(type => {
-        return `<span class="bg-[var(${typeColors[type]})] text-white p-1 rounded-full">${traduccionTipos[type]}</span>`
-
+        const typeElement = `<p class="text-xs">${traduccionTipos[type]}</p>`
+        return renderBadgeType(type, typeElement)
     }).join('')}
                 </section>
-
             </div>
         </div>
         <div class="flex justify-between bg-linear-to-r from-(--poke-yellow) to-(--poke-white) p-1">
@@ -130,7 +132,7 @@ export function renderCard(pokemon, actions) {
 
 
 
-export async function renderDetails(onShowDetails) {
+async function renderDetails(onShowDetails) {
 
     const { pokemon, onShowEvolutionChain } = onShowDetails
     const stastDialog = document.querySelector('#pokemon-stats')
@@ -150,13 +152,105 @@ export async function renderDetails(onShowDetails) {
                 <h2 class="font-semi-bold md:text-3xl">#${String(pokemon.id).padStart(3, '0')}</h2>
 
                 <div id="pokemon-stats-types" class="mt-3 flex justify-center items-center font-bold gap-1 ">
-                    ${types.map(type => {
-        return `<span class="bg-[var(${typeColors[type]})] text-white p-1 rounded-full">${traduccionTipos[type]}</span>`
+                                                        ${types.map(type => {
+        const typeElement = `<p class="text-xs md:text-2xl">${traduccionTipos[type]}</p>`
+        return renderBadgeType(type, typeElement)
     }).join('')}
                 </div>
 
-                <div class="mt-2 flex flex-col gap-2 items-center">
-                    ${stats.map(stat => {
+                <div class="flex m-auto gap-2 w-fit font-bold md:text-xl border-b border-b-(--poke-gray) mt-3 justify-center items-center">
+                <div id="description-menu" class="select-menu p-1 hover:cursor-pointer focus:text-blue-700">Descripción</div>
+                <div id="statics-menu" class="select-menu p-1 hover:cursor-pointer focus:text-blue-700">Estadísticas</div>
+                <div id="evolution-menu"class="select-menu p-1 hover:cursor-pointer focus:text-blue-700">Cadena de evolución</div>
+                </div>
+
+                <div class="mt-2 flex statics-menu flex-col gap-2 items-center">
+                   ${renderStats(stats)}
+                </div>
+
+                <div id="evolution-chain" class="p-5 hidden evolution-menu border-t border-t-(--poke-gray) flex-col justify-center w-full items-center gap-10"> 
+                <h2 class="font-bold md:text-xl p-2" >Cadena de evolución:</h2>
+                <div id="evolution-chain-container" class="flex   justify-between lg:w-3/5 m-auto [&_svg]:last:hidden items-center"></div>
+                </div>
+
+                <div id="pokemon-stats-height-weight" class="flex  gap-3 justify-center px-4 mt-3">
+
+                </div>
+
+
+    
+            </div>  
+
+            <button id="btn-close-stats" class=" p-1 bg-(--poke-yellow) font-bold text-xl rounded text-white hover:bg-yellow-700 mb-5 ">Cerrar</button>
+
+
+        </div>
+    `
+
+
+
+    stastDialog.insertAdjacentHTML('beforeend', detailsTpl)
+    stastDialog.classList.toggle('hidden')
+    document.querySelector('body').classList.add('overflow-hidden')
+
+    renderEvolutionChain(pokemon, onShowEvolutionChain)
+    renderHeightAndWeight(pokemon)
+
+    renderSelectionMenu()
+
+
+    const closeBtn = document.querySelector('#btn-close-stats')
+    closeBtn.addEventListener('click', () => {
+        stastDialog.classList.toggle('hidden')
+        document.querySelector('body').classList.remove('overflow-hidden')
+
+    })
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !stastDialog.classList.contains('hidden')) stastDialog.classList.toggle('hidden')
+    })
+
+}
+
+async function renderEvolutionChain(pokemon, onShowEvolutionChain) {
+    const divEvolutionChain = document.querySelector('#evolution-chain-container')
+    const evolutionChainData = await onShowEvolutionChain(pokemon)
+
+
+
+    for (const [key, pokemonEv] of evolutionChainData) {
+        if (pokemonEv) {
+            const evolutionChainTpl = /*html*/` 
+    <div class="flex justify-between gap-5  items-center">
+        <img src="${pokemonEv.sprites.other.dream_world.front_default}" alt="ejemplo" class="size-15 md:size-30">
+    </div>`
+            divEvolutionChain.insertAdjacentHTML('beforeend', evolutionChainTpl)
+            divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5L16 12L8 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`)
+
+
+        }
+    }
+    if (evolutionChainData.size === 0) {
+        divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<h2 class="font-bold md:text-lg">Este Pokémon no tiene evolución</h2>`)
+    }
+
+}
+
+function renderBadgeType(type, element) {
+    const badgeTpl = /*html*/`
+    <div class="bg-[var(${typeColors[type]})] text-white p-1 rounded-full flex flex-wrap items-center justify-center gap-1">
+        <img src="./assets/icons/${type}.svg" class="size-4" alt="icono no encontrado">
+        ${element}
+    </div>`
+
+    return badgeTpl
+}
+
+
+function renderStats(stats) {
+    return `
+    ${stats.map(stat => {
 
         let color = "bg-green-500"
 
@@ -172,82 +266,30 @@ export async function renderDetails(onShowDetails) {
                         </div>
                     </div>
                 </div>`
-    }).join('')}
-                </div>
-
-                <div class="flex md:max-w-1/2 md:m-auto justify-between px-4 mt-3">
-                    <h2 class="font-bold md:text-xl">Altura: </h2>
-                    <h2 class="md:text-xl">${pokemon.height / 10}m</h2>
-                    <h2 class="font-bold md:text-xl">Peso: </h2>
-                    <h2 class="md:text-xl">${pokemon.weight / 10}kg</h2>
-                </div>
-    
-            </div>  
-
-            <button id="btn-close-stats" class=" p-1 bg-(--poke-yellow) font-bold text-xl rounded text-white hover:bg-yellow-700 mb-5 ">Cerrar</button>
-
-            <div id="evolution-chain" class="p-5 border-t border-t-(--poke-gray) flex-col justify-center w-full items-center gap-10"> 
-            <h2 class="font-bold md:text-xl p-2" >Cadena de evolución:</h2>
-            <div id="evolution-chain-container" class="flex   justify-between lg:w-3/5 m-auto [&_svg]:last:hidden items-center"></div>
-            </div>
-        </div>
-    `
-
-
-    stastDialog.insertAdjacentHTML('beforeend', detailsTpl)
-    stastDialog.classList.toggle('hidden')
-    document.querySelector('body').classList.add('overflow-hidden')
-
-    const divEvolutionChain = document.querySelector('#evolution-chain-container')
-
-    const evolutionChainData = await onShowEvolutionChain(pokemon)
-
-    for (const [key, pokemonEv] of evolutionChainData) {
-        if (pokemonEv) {
-            divEvolutionChain.insertAdjacentHTML('beforeend', renderEvolutionChain(pokemonEv))
-            divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 5L16 12L8 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`)
-
-
-        }
-    }
-
-    if (evolutionChainData.size === 0) {
-        divEvolutionChain.insertAdjacentHTML('beforeend', /*html*/`<h2 class="font-bold md:text-lg">Este Pokémon no tiene evolución</h2>`)
-    }
-
-
-
-    stastDialog.addEventListener('click', (e) => {
-
-        if (!stastDialog.classList.contains('hidden')) {
-            stastDialog.classList.toggle('hidden')
-            document.querySelector('body').classList.remove('overflow-hidden')
-        }
-    })
-
-
-    const closeBtn = document.querySelector('#btn-close-stats')
-
-    closeBtn.addEventListener('click', () => {
-        stastDialog.classList.toggle('hidden')
-        document.querySelector('body').classList.remove('overflow-hidden')
-
-    })
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !stastDialog.classList.contains('hidden')) stastDialog.classList.toggle('hidden')
-    })
-
+    }).join('')}`
 }
 
 
-export function renderEvolutionChain(pokemon) {
-    const evolutionChainTpl = /*html*/` 
-    <div class="flex justify-between gap-5  items-center">
-        <img src="${pokemon.sprites.other.dream_world.front_default}" alt="ejemplo" class="size-15 md:size-30">
-    </div>`
+function renderHeightAndWeight(pokemon) {
+    const section = document.querySelector('#pokemon-stats-height-weight')
+    const height = pokemon.height / 10
+    const weight = pokemon.weight / 10
 
-    return evolutionChainTpl
+    const heightAndWeightTpl = /*html*/`
+                        <h2 class="font-bold md:text-xl px-2 border-r border-l ">Altura:<span class="font-normal">${height}m</span></h2>
+                        <h2 class="font-bold md:text-xl px-2 border-r border-l ">Peso:<span class="font-normal">${weight}kg</span></h2>
+    
+`
+    section.insertAdjacentHTML('beforeend', heightAndWeightTpl)
+}
+
+function renderSelectionMenu(){
+    const menu = document.querySelectorAll('.select-menu')
+
+    menu.forEach(element => {
+        element.addEventListener('click', () => {
+            console.log('click', element.id)
+        })})
+            
+
 }

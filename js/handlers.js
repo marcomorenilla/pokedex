@@ -22,7 +22,6 @@ const { pagination } = state
 export async function handleInit() {
     state.isLoading = true
     handleLoading()
-    console.log('handleInit  inicial', data)
     const typesData = await getTypes()
     renderTypes(typesData)
     pagination.offset = 0
@@ -41,7 +40,6 @@ export async function handleInit() {
 }
 
 export function handleLoading() {
-    console.log('handleLoading', 'entering handle loading', state.isLoading)
     document.querySelector('body').classList.add('overflow-hidden')
     const loadingDialog = document.querySelector('#loading-dialog')
     const dots = document.querySelectorAll('.dots')
@@ -57,7 +55,6 @@ export function handleLoading() {
         loadingDialog.close()
         document.querySelector('body').classList.remove('overflow-hidden')
     }
-    console.log('handleLoading', 'exiting handle loading', state.isLoading)
 }
 
 export function handleError() {

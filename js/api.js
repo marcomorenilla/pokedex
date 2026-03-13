@@ -22,7 +22,6 @@ export async function getPokemonByUrl(url) {
     try {
         const request = await fetch(url)
         if (request.ok) {
-
             const response = await request.json()
             return response
         } else {

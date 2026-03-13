@@ -6,7 +6,7 @@ import { addToLocalStorage, removeFromLocalStorage } from "./localStorage.js";
 /**--Render Ui Config helper --*/
 
 const data = {
-    pokemonList: state.fullPokemonList,
+    pokemon: null,
     append: true,
 }
 const cardActions = {
@@ -22,14 +22,14 @@ const { pagination } = state
 export async function handleInit() {
     state.isLoading = true
     handleLoading()
-
+    console.log('handleInit  inicial', data)
     const typesData = await getTypes()
     renderTypes(typesData)
     pagination.offset = 0
     const pokemonData = await getAllPokemon(pagination)
     for (const pokemon of pokemonData) {
-        const pokemonFullData =
-            data.pokemonList = await getPokemonByUrl(pokemon.url)
+        const pokemonFullData = await getPokemonByUrl(pokemon.url)
+        data.pokemon = pokemonFullData
         data.append = true
         await renderUi(data, cardActions)
         state.fullPokemonList.set(pokemonFullData.id, pokemonFullData)
@@ -41,6 +41,7 @@ export async function handleInit() {
 }
 
 export function handleLoading() {
+    console.log('handleLoading', 'entering handle loading', state.isLoading)
     document.querySelector('body').classList.add('overflow-hidden')
     const loadingDialog = document.querySelector('#loading-dialog')
     const dots = document.querySelectorAll('.dots')
@@ -52,11 +53,11 @@ export function handleLoading() {
         });
         loadingDialog.showModal()
     } else {
-            dots.forEach(dot => dot.classList.remove('animate-dots'))
-            loadingDialog.close()
-            document.querySelector('body').classList.remove('overflow-hidden')
+        dots.forEach(dot => dot.classList.remove('animate-dots'))
+        loadingDialog.close()
+        document.querySelector('body').classList.remove('overflow-hidden')
     }
-    
+    console.log('handleLoading', 'exiting handle loading', state.isLoading)
 }
 
 export function handleError() {
@@ -75,7 +76,7 @@ export async function handleSearch(observer, trigger, searchInput) {
     handleLoading()
     const pokemonSearch = await getPokemonByName(searchInput.value)
     if (pokemonSearch) {
-        data.pokemonList = await getPokemonByName(searchInput.value)
+        data.pokemon = await getPokemonByName(searchInput.value)
         data.append = false
         await renderUi(data, cardActions)
     } else {
@@ -95,13 +96,13 @@ export async function handleScroll() {
     pagination.offset += pagination.init
     pagination.init = 151
 
-    
+
     const newPokemon = await getAllPokemon(pagination)
     for (const pokemon of newPokemon) {
-        data.pokemonList = await getPokemonByUrl(pokemon.url)
+        data.pokemon = await getPokemonByUrl(pokemon.url)
         data.append = true
         await renderUi(data, cardActions)
-        state.fullPokemonList.set(data.pokemonList.id, data.pokemonList)
+        state.fullPokemonList.set(data.pokemon.id, data.pokemon)
     }
 
     state.isLoading = false
@@ -115,16 +116,21 @@ export async function handleFilter(observer, trigger) {
     btnType.forEach(btn => {
         btn.addEventListener('click', async () => {
             observer.unobserve(trigger)
-            pagination.offset = 0
             state.isLoading = true
             handleLoading()
 
             if (btn.id != 'todos') {
+                console.log('click 1', btn.id)
                 handleFilterTypes(btn)
             } else {
-                data.pokemonList = [...state.fullPokemonList.values()]
+                console.log('click 2', btn.id)
+                const pokemonList = [...state.fullPokemonList.values()]
                 data.append = false
-                await renderUi(data, cardActions)
+                for (const pokemon of pokemonList) {
+                    data.pokemon = pokemon
+                    await renderUi(data, cardActions)
+                    data.append = true
+                }
                 state.isLoading = false
                 state.filteredPokemonList.clear()
                 handleLoading()

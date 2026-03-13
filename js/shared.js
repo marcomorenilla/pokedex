@@ -21,14 +21,6 @@ export const typeColors = {
     unknown: '--poke-unknown'
 };
 
-export const state = {
-    isLoading: true,
-    pokemonList: [],
-    favorites: JSON.parse(localStorage.getItem('favorites')) || [],
-    requestStatus: '',
-    fullPokemonList: new Map(),
-    filteredPokemonList: new Map()
-}
 
 export const traduccionTipos = {
     normal: "normal",
@@ -60,9 +52,4 @@ export const traduccionStats = {
     'special-attack': 'At-especial',
     'special-defense': 'Def-especial',
     'speed': 'Velocidad'
-}
-
-export const pagination = {
-    init: 151,
-    offset:12
 }

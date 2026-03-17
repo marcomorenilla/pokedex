@@ -44,7 +44,8 @@ function renderDataList(pokemon) {
 }
 
 export function renderCard(pokemon, actions) {
-  const { onIsFavorite, onFavoriteClick, onShowEvolutionChain } = actions;
+  const { onIsFavorite, onFavoriteClick, onShowEvolutionChain, onAddToTeam } =
+    actions;
 
   const onShowDetails = {
     pokemon,
@@ -59,10 +60,12 @@ export function renderCard(pokemon, actions) {
   const isFavorite = onIsFavorite(pokemon);
 
   const cartTpl = /*html */ `
-    <article  class="rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white)  shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
-        <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable flex relative w-auto h-auto flex-col  items-center">
-            <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
-                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-30 z-1">
+    <article  class="relative flex flex-col justify-between gap-3 rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white)  shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
+    <div id="responsive-add-${pokemon.id}" class="lg:hidden absolute z-2 top-0 right-1 font-bold w-fit bg-white cursor-pointer hover:text-lg  p-1">+</div>
+    <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable cursor-grab flex relative w-auto h-auto flex-col  items-center">
+            <section class="bg-white relative size-full flex justify-center py-2 px-2 rounded-b-lg">
+            
+                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="pointer-events-none size-30 z-1">
             </section>
 
             <div class="p-2">
@@ -70,7 +73,96 @@ export function renderCard(pokemon, actions) {
                 <section id="name-container" class="flex justify-center gap-1">
                     <h2 class="font-bold text-xl">${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</h2>
                 </section>
-                <section id="type-container" class="flex font-bold justify-center gap-1">
+                <section id="type-container" class="flex flex-wrap font-bold justify-center gap-1">
+                                    ${types
+                                      .map((type) => {
+                                        const typeElement = `<p class="text-xs">${traduccionTipos[type]}</p>`;
+                                        return renderBadgeType(
+                                          type,
+                                          typeElement,
+                                        );
+                                      })
+                                      .join("")}
+                </section>
+            </div>
+        </div>
+        <div class="flex justify-between bg-linear-to-r from-(--poke-yellow) to-(--poke-white) cursor-[url('/assets/cursor-2.svg'),_default] p-1">
+            <section id="number-container" class="px-3">
+                <h2 class="font-bold text-lg">#${String(pokemon.id).padStart(3, "0")}</h2>
+            </section>
+            <svg 
+                id="heart-${pokemon.id}" 
+                width="20px" 
+                height="20px" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+                style="cursor: pointer;"
+                >
+                <path id="path-corazon-${pokemon.id}"
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
+                    fill="${isFavorite ? "#cc0000" : "none"}"
+                    stroke="#CC0000" 
+                    stroke-width="2"
+                />
+            </svg>
+        </div>
+    </article>
+    `;
+  gridSection.insertAdjacentHTML("beforeend", cartTpl);
+  const showMore = document.querySelector(`#card-${pokemon.id}`);
+
+  const corazonSvg = document.getElementById(`heart-${pokemon.id}`);
+  const pathCorazon = document.getElementById(`path-corazon-${pokemon.id}`);
+
+  corazonSvg.addEventListener("click", () => {
+    onFavoriteClick(pokemon, isFavorite);
+
+    if (!isFavorite) {
+      pathCorazon.setAttribute("fill", "#cc0000");
+      corazonSvg.style.transform = "scale(1.2)";
+      setTimeout(() => (corazonSvg.style.transform = "scale(1)"), 100);
+    } else {
+      pathCorazon.setAttribute("fill", "none");
+    }
+  });
+
+  const addToTeam = document.querySelector(`#responsive-add-${pokemon.id}`);
+  addToTeam.addEventListener("click", () => onAddToTeam(pokemon));
+
+  showMore.addEventListener(
+    "click",
+    async () => await renderDetails(onShowDetails),
+  );
+}
+
+export function renderCardV2(pokemon, actions, sectionName) {
+  const { onIsFavorite, onFavoriteClick, onShowEvolutionChain } = actions;
+
+  const onShowDetails = {
+    pokemon,
+    onShowEvolutionChain,
+  };
+
+  const gridSection = document.querySelector(`${sectionName}`);
+  const sprites = pokemon.sprites ? pokemon.sprites : pokemon.front_default;
+
+  const types = pokemon.types.map((type) => type.type.name);
+
+  const isFavorite = onIsFavorite(pokemon);
+
+  const cartTpl = /*html */ `
+    <article  class="flex flex-col justify-between rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white)  shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
+        <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable flex relative w-auto h-auto flex-col  items-center">
+            <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
+                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-15 z-1">
+            </section>
+
+            <div class="p-2">
+
+                <section id="name-container" class="flex justify-center gap-1">
+                    <h2 class="font-bold text-xl">${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</h2>
+                </section>
+                <section id="type-container" class="flex flex-wrap font-bold justify-center gap-1">
                                     ${types
                                       .map((type) => {
                                         const typeElement = `<p class="text-xs">${traduccionTipos[type]}</p>`;
@@ -302,19 +394,20 @@ export function renderNoContentDialog() {
   });
 }
 
-export function renderDragZone(team, onDragged) {
+export function renderDragZone(team, onDrag) {
   const dragSection = document.querySelector("#drag-section");
   dragSection.innerHTML = "";
   for (let i = 0; i < 6; i++) {
     if (i < team.length) {
       const pokemonDragged = /*html*/ `
         <article
-          class="team-card h-[200px] items-center justify-center flex flex-col rounded-sm bg-white">
+          id="team-card-${i}"
+          class="team-card h-[200px]  items-center justify-center flex flex-col rounded-sm bg-white">
           <div class="text-center text-(--poke-yellow) font-bold">
         <div>
-        <img src="${team[i].sprite}" alt="pokedata" class="size-7">
+        <img id="img-team-${i}" src="${team[i].sprite}" alt="pokedata" class="m-auto size-15">
         </div>
-        <div class="font-bold text-(--poke-yellow)">${team[i].name}</div>
+        <div id="name-team-${i}" class="font-bold text-(--poke-yellow)">${team[i].name}</div>
           </div>
         </article>
     `;
@@ -322,6 +415,7 @@ export function renderDragZone(team, onDragged) {
     } else {
       const defaultDrag = /*html*/ `
         <article
+        id="team-card-${i}"
           class="team-card h-[200px] items-center justify-center flex flex-col rounded-sm bg-white">
           <div class="text-center text-(--poke-yellow) font-bold">
         <div>
@@ -331,5 +425,5 @@ export function renderDragZone(team, onDragged) {
       dragSection.insertAdjacentHTML("beforeend", defaultDrag);
     }
   }
-  onDragged();
+  onDrag();
 }

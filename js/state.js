@@ -8,5 +8,8 @@ export const state = {
     offset: 12,
   },
   filters: new Set(),
+  focus: "team1",
   team1: JSON.parse(localStorage.getItem("team1")) || [],
+  team2: JSON.parse(localStorage.getItem("team2")) || [],
+  team3: JSON.parse(localStorage.getItem("team3")) || [],
 };

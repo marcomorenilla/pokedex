@@ -1,59 +1,44 @@
-
-import { handleInit, handleFilter, handleSearch, handleScroll } from "./handlers.js";
+import {
+  handleInit,
+  handleFilter,
+  handleSearch,
+  handleScroll,
+} from "./handlers.js";
 
 async function init() {
-    const searchBtn = document.getElementById('search-btn');
-    const searchInput = document.getElementById('search-input');
-    const trigger = document.querySelector("#scroll-trigger");
+  const searchBtn = document.getElementById("search-btn");
+  const searchInput = document.getElementById("search-input");
+  const trigger = document.querySelector("#scroll-trigger");
 
-    const observer = new IntersectionObserver((entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-            handleScroll()
-        }
-    }, {
-        root: null,
-        threshold: 0.1
-    });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting) {
+        handleScroll();
+      }
+    },
+    {
+      root: null,
+      threshold: 0.1,
+    },
+  );
 
-    await handleInit()
-    await handleFilter(observer, trigger)
+  await handleInit();
+  await handleFilter(observer, trigger);
 
+  searchBtn.addEventListener("click", async () => {
+    handleSearch(observer, trigger, searchInput);
+  });
 
-    searchBtn.addEventListener('click', async () => {
-        handleSearch(observer, trigger, searchInput)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && searchInput.value != "") {
+      handleSearch(observer, trigger, searchInput);
+    }
+  });
 
-    })
-
-
-
-    observer.observe(trigger);
+  observer.observe(trigger);
 }
 
-document.addEventListener('DOMContentLoaded',  () => {
-
-
-    init()
-
-
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});

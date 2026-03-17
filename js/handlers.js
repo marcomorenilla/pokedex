@@ -10,6 +10,7 @@ import {
   renderNoContentDialog,
   renderTypes,
   renderDragZone,
+  renderCardV2,
 } from "./renders.js";
 import { state } from "./state.js";
 import { addToLocalStorage, removeFromLocalStorage } from "./localStorage.js";
@@ -25,6 +26,7 @@ const cardActions = {
   onIsFavorite: handleIsFavorite,
   onFavoriteClick: handleFavoriteClick,
   onShowEvolutionChain: handleEvolutionChain,
+  onAddToTeam: handleResponsiveDrag,
 };
 
 /**--Desestructuración de pagination */
@@ -278,10 +280,20 @@ function handleAside() {
 
   const closeBtn = document.getElementById("close-team-btn");
 
+  const deleteTeamBtn = document.getElementById("delete-team-btn");
+  const showTeamDetailsBtn = document.getElementById("show-team-details-btn");
+
+  showTeamDetailsBtn.addEventListener("click", handleTeamDetails);
+
+  deleteTeamBtn.addEventListener("click", handleDeleteTeam);
+
+  const teamSelected = state.focus;
+
   openBtn.addEventListener("click", () => {
     document.getElementById("team-section").classList.remove("hidden");
     openBtn.classList.add("hidden");
-    renderDragZone(state.team1, handleDrag);
+    handleFocus(".team-menu");
+    renderDragZone(state[teamSelected], handleDrag);
   });
   closeBtn.addEventListener("click", () => {
     document.getElementById("team-section").classList.add("hidden");
@@ -289,12 +301,58 @@ function handleAside() {
   });
 }
 
+function handleResponsiveDrag(pokemon) {
+  console.log(pokemon);
+  state.focus = "team1";
+  handleFocus(".team-menu");
+  document.getElementById("team-section").classList.remove("hidden");
+  const teamSelected = state.focus;
+  renderDragZone(state[teamSelected], () => {});
+
+  const dragSection = document.querySelector("#drag-section");
+
+  if (dragSection._controller) {
+    dragSection._controller.abort();
+  }
+
+  dragSection._controller = new AbortController();
+  const { signal } = dragSection._controller;
+
+  dragSection.addEventListener(
+    "click",
+    () => {
+      const teamToAdd = state.focus;
+      const pokemonData = {
+        id: pokemon.id,
+        name: pokemon.name,
+        sprite: pokemon.sprites.other.dream_world.front_default,
+      };
+
+      console.log("pokemon data: ", pokemonData);
+      if (state[teamToAdd].length < 6) {
+        state[teamToAdd].push(pokemonData);
+        console.log("pokemon added: ", state[teamToAdd], teamToAdd);
+        localStorage.setItem(teamToAdd, JSON.stringify(state[teamToAdd]));
+        document.getElementById("team-section").classList.add("hidden");
+        document.getElementById("open-team-btn").classList.remove("hidden");
+        document.querySelector("#responsive-notification").showModal();
+        setTimeout(() => {
+          document.querySelector("#responsive-notification").close();
+        }, 2000);
+      } else {
+        document.querySelector("#full-team-dialog").showModal();
+      }
+    },
+    { signal },
+  );
+}
+
 function handleDrag() {
   const dragZones = document.querySelectorAll(".team-card");
 
   const draggable = document.querySelectorAll(".draggable");
 
-  handleFocus(".team-menu");
+  const teamSelected = state.focus;
 
   draggable.forEach((pokemon) => {
     pokemon.addEventListener("dragstart", (e) => {
@@ -319,11 +377,15 @@ function handleDrag() {
       e.preventDefault();
       const jsonData = e.dataTransfer.getData("application/json");
       const data = JSON.parse(jsonData);
-      console.log("data drageada", data);
-      state.team1.push(data);
-      renderDragZone(state.team1, handleDrag);
-      console.log("estado equipo", state.team1);
-      localStorage.setItem("team1", JSON.stringify(state.team1));
+      console.log("data drageada en", data, e.target);
+      if (state[teamSelected].length < 6) {
+        state[teamSelected].push(data);
+        renderDragZone(state[teamSelected], handleDrag);
+        console.log("estado equipo", state[teamSelected]);
+        localStorage.setItem(teamSelected, JSON.stringify(state[teamSelected]));
+      } else {
+        document.querySelector("#full-team-dialog").showModal();
+      }
     });
   });
 }
@@ -331,14 +393,71 @@ function handleDrag() {
 function handleFocus(elClass) {
   const allElements = document.querySelectorAll(elClass);
 
+  let teamSelected;
+
   allElements.forEach((element) => {
-    element.classList.remove("bg-white");
+    if (element.id == "team1") {
+      element.classList.add("bg-white", "[&_h3]:text-(--poke-yellow)");
+    } else {
+      element.classList.remove("bg-white", "[&_h3]:text-(--poke-yellow)");
+    }
+
     element.addEventListener("click", () => {
       const activeDivs = document.querySelectorAll(elClass);
       activeDivs.forEach((div) => {
         div.classList.remove("bg-white", "[&_h3]:text-(--poke-yellow)");
       });
       element.classList.add("bg-white", "[&_h3]:text-(--poke-yellow)");
+      teamSelected = element.id;
+      console.log("handle focus", teamSelected);
+      state.focus = teamSelected;
+
+      renderDragZone(state[teamSelected], handleDrag);
     });
+  });
+}
+
+function handleDeleteTeam() {
+  const deleteDialog = document.getElementById("delete-team-dialog");
+  const form = document.getElementById("delete-team-form");
+  const cancelBtn = document.getElementById("cancel-delete-team");
+  const teamSelected = state.focus;
+
+  deleteDialog.showModal();
+
+  cancelBtn.addEventListener("click", () => {
+    deleteDialog.close();
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    state[teamSelected] = [];
+    localStorage.removeItem(teamSelected);
+    renderDragZone(state[teamSelected], handleDrag);
+    deleteDialog.close();
+  });
+}
+
+function handleTeamDetails() {
+  const detailsSection = document.querySelector("#show-team-details");
+  const closeDetailsBtn = document.querySelector("#close-team-details");
+  const section = "#grid-team-section";
+  const documentSection = document.querySelector(section);
+
+  const teamSelected = state.focus;
+
+  documentSection.innerHTML = "";
+
+  detailsSection.classList.remove("hidden");
+  closeDetailsBtn.addEventListener("click", () => {
+    detailsSection.classList.add("hidden");
+  });
+
+  const team = state[teamSelected].map((pokemon) => {
+    return state.fullPokemonList.get(Number(pokemon.id));
+  });
+
+  team.forEach((pokemon) => {
+    renderCardV2(pokemon, cardActions, section);
   });
 }

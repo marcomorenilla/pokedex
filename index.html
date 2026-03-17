@@ -50,7 +50,10 @@
       <section
         id="open-team-btn"
         class="absolute right-10 md:right-40 cursor-pointer animate-opacidad">
-        <img src="assets/pc.svg" alt="pc" class="size-15 hover:size-20" />
+        <img
+          src="assets/pc.svg"
+          alt="pc"
+          class="size-10 lg:size-15 lg:hover:size-20" />
       </section>
     </nav>
     <main class="flex flex-col items-center">
@@ -83,7 +86,7 @@
       </section>
       <section id="team-menu-section ">
         <div
-          id="team-1"
+          id="team1"
           class="team-menu cursor-pointer border-b-2 border-b-(--poke-white) hover:bg-(--poke-white)">
           <h3
             class="text-(--poke-white) px-2 hover:text-(--poke-yellow) font-bold text-xl py-2">
@@ -91,7 +94,7 @@
           </h3>
         </div>
         <div
-          id="team-2"
+          id="team2"
           class="team-menu cursor-pointer border-b-2 border-b-(--poke-white) hover:bg-(--poke-white)">
           <h3
             class="text-(--poke-white) px-2 hover:text-(--poke-yellow) font-bold text-xl py-2">
@@ -99,7 +102,7 @@
           </h3>
         </div>
         <div
-          id="team-3"
+          id="team3"
           class="team-menu cursor-pointer border-b-2 border-b-(--poke-white) hover:bg-(--poke-white)">
           <h3
             class="text-(--poke-white) px-2 hover:text-(--poke-yellow) font-bold text-xl py-2">
@@ -115,10 +118,12 @@
         id="team-action-buttons"
         class="flex flex-wrap items-center px-2 justify-center gap-2 mt-5">
         <button
+          id="show-team-details-btn"
           class="text-(--poke-white) font-bold rounded-sm bg-(--poke-blue) hover:bg-blue-700 p-2">
           Ver equipo
         </button>
         <button
+          id="delete-team-btn"
           class="text-(--poke-white) font-bold rounded-sm bg-(--poke-red) hover:bg-red-700 p-2">
           Eliminar equipo
         </button>
@@ -153,6 +158,79 @@
           class="no-content-dialog-btn bg-(--poke-red) text-white p-2 rounded-full font-bold hover:bg-red-700">
           Aceptar
         </button>
+      </div>
+    </dialog>
+
+    <dialog
+      id="delete-team-dialog"
+      class="outline-none fixed self-center justify-self-center transition-all transition-discrete duration-700 delay-300 ease-in-out p-5 rounded-sm">
+      <form id="delete-team-form" method="dialog" class="m-auto">
+        <h2 class="font-bold text-2xl mb-3">
+          ¿Estás seguro de eliminar este equipo?
+        </h2>
+        <p class="text-(--poke-red) text-xl mb-3 font-bold">
+          Esta operación no puede ser revertida
+        </p>
+        <button
+          type="reset"
+          id="cancel-delete-team"
+          class="font-bold text-lg p-1 rounded-sm bg-white text-(--poke-blue) border border-(--poke-blue) hover:text-white hover:bg-(--poke-blue)">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="font-bold text-lg p-1 rounded-sm bg-white text-(--poke-red) border border-(--poke-red) hover:text-white hover:bg-(--poke-red)">
+          Aceptar
+        </button>
+      </form>
+    </dialog>
+
+    <div
+      id="show-team-details"
+      class="w-screen hidden animate-opacidad h-screen fixed top-0 left-0 bg-yellow-500/50 z-4">
+      <div class="w-5/6 h-5/6 mx-auto mt-20 bg-white rounded-sm p-3">
+        <div class="flex gap-1 justify-between">
+          <h2
+            class="text-center w-full text-(--poke-yellow) text-4xl font-bold">
+            Equipo 1
+          </h2>
+          <button
+            id="close-team-details"
+            class="py-1 px-3 border-(--poke-yellow) font-bold text-(--poke-yellow) hover:text-(--poke-white) hover:bg-(--poke-yellow) border-3 border-(--poke-yellow) rounded-sm">
+            x
+          </button>
+        </div>
+
+        <div
+          id="grid-team-section"
+          class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+      </div>
+    </div>
+
+    <dialog
+      id="full-team-dialog"
+      class="outline-none animate-opacidad backdrop:bg-orange-500/50 fixed self-center justify-self-center transition-all transition-discrete duration-700 delay-300 ease-in-out p-5 rounded-sm">
+      <form
+        id="full-team-form"
+        class="flex flex-col justify-center items-center">
+        <h2 class="text-lg mb-3">
+          No hay hueco en el equipo, eliminalo y vuelve a intentarlo o busca un
+          equipo con hueco
+        </h2>
+        <button
+          formmethod="dialog"
+          class="font-bold p-1 rounded-sm text-white bg-(--poke-blue) hover:bg-blue-700">
+          Aceptar
+        </button>
+      </form>
+    </dialog>
+
+    <dialog
+      id="responsive-notification"
+      class="outline-none animate-notification fixed self-center justify-self-center transition-all transition-discrete duration-700 delay-300 ease-in-out p-5 rounded-sm">
+      <div class="flex gap-2">
+        <img src="assets/approval.svg" alt="ok" class="size-15" />
+        <h2 class="text-lg mb-3">Pokemon añadido correctamente</h2>
       </div>
     </dialog>
 

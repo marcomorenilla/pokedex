@@ -443,9 +443,25 @@ function handleTeamDetails() {
   const closeDetailsBtn = document.querySelector("#close-team-details");
   const section = "#grid-team-section";
   const documentSection = document.querySelector(section);
-
+  const teamTitle = document.querySelector("#team-details-title");
+  console.log("sección equipo", teamTitle);
   const teamSelected = state.focus;
+  console.log("equipo seleccionado", teamSelected);
 
+  let translatedTeam = "";
+
+  switch (teamSelected) {
+    case "team1":
+      translatedTeam = "Equipo 1";
+      break;
+    case "team2":
+      translatedTeam = "Equipo 2";
+      break;
+    case "team3":
+      translatedTeam = "Equipo 3";
+      break;
+  }
+  teamTitle.innerHTML = translatedTeam;
   documentSection.innerHTML = "";
 
   detailsSection.classList.remove("hidden");

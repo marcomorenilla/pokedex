@@ -7,7 +7,6 @@ import {
 } from "./api.js";
 import {
   renderUi,
-  renderNoContentDialog,
   renderTypes,
   renderDragZone,
   renderCardV2,
@@ -27,6 +26,7 @@ const cardActions = {
   onFavoriteClick: handleFavoriteClick,
   onShowEvolutionChain: handleEvolutionChain,
   onAddToTeam: handleResponsiveDrag,
+  onSelectionMenu: hanldeSelectionMenu,
 };
 
 /**--Desestructuración de pagination */
@@ -123,32 +123,38 @@ export async function handleFilter(observer, trigger) {
   const btnType = document.querySelectorAll(`.type-btn`);
 
   btnType.forEach((btn) => {
+    console.log("btn", btn.id);
     btn.addEventListener("click", async () => {
       observer.unobserve(trigger);
       state.isLoading = true;
       handleLoading();
       if (btn.id != "todos") {
         handleBtnStyle(btn, true);
-        handleFilterTypes(btn);
+        handleFilterTypes(btn, observer, trigger);
       } else {
-        const pokemonList = [...state.fullPokemonList.values()];
-        data.append = false;
-        for (const pokemon of pokemonList) {
-          data.pokemon = pokemon;
-          await renderUi(data, cardActions);
-          data.append = true;
-        }
-        state.isLoading = false;
-        state.filteredPokemonList.clear();
         handleBtnStyle(btn, false);
-        handleLoading();
-        observer.observe(trigger);
+        handleResetFilters(btn, observer, trigger);
       }
     });
   });
 }
 
-export async function handleFilterTypes(btn) {
+async function handleResetFilters(btn, observer, trigger) {
+  const pokemonList = [...state.fullPokemonList.values()];
+  data.append = false;
+  for (const pokemon of pokemonList) {
+    data.pokemon = pokemon;
+    await renderUi(data, cardActions);
+    data.append = true;
+  }
+  state.isLoading = false;
+  state.filteredPokemonList.clear();
+  handleBtnStyle(btn, false);
+  handleLoading();
+  observer.observe(trigger);
+}
+
+export async function handleFilterTypes(btn, observer, trigger) {
   let pokemonFiltered;
   if (btn.id === "favs") {
     pokemonFiltered = await getPokemonByFavoriteType();
@@ -168,11 +174,23 @@ export async function handleFilterTypes(btn) {
   } else {
     state.isLoading = false;
     handleLoading();
-    renderNoContentDialog();
+    handleNoContentDialog(btn, observer, trigger);
   }
 }
 
+function handleNoContentDialog(btn, observer, trigger) {
+  const noContentDialog = document.querySelector("#no-content-dialog");
+  const noContentDialogBtn = document.querySelector(".no-content-dialog-btn");
+  noContentDialog.showModal();
+
+  noContentDialogBtn.addEventListener("click", () => {
+    noContentDialog.close();
+    handleResetFilters(btn, observer, trigger);
+  });
+}
+
 function handleBtnStyle(btn, isClicked = true) {
+  console.log("btn", btn.id);
   if (isClicked && btn.id != "favs") {
     btn.classList.add("bg-white", `text-(${typeColors[btn.id]})`);
     btn.classList.remove(`bg-[var(${typeColors[btn.id]})]`, `text-white`);
@@ -238,7 +256,8 @@ export function handleIsFavorite(pokemon) {
 }
 
 export function handleFavoriteClick(pokemon, isFavorite) {
-  isFavorite ? removeFromLocalStorage(pokemon) : addToLocalStorage(pokemon);
+  console.log("handleFavoriteClick", isFavorite);
+  isFavorite ? addToLocalStorage(pokemon) : removeFromLocalStorage(pokemon);
 }
 
 export async function getPokemonByType(type) {
@@ -291,12 +310,26 @@ function handleAside() {
 
   openBtn.addEventListener("click", () => {
     document.getElementById("team-section").classList.remove("hidden");
+    document.querySelector("main").classList.add("w-3/5");
+    document
+      .querySelector("#grid-card-section")
+      .classList.remove("lg:grid-cols-6");
+    document
+      .querySelector("#grid-card-section")
+      .classList.add("lg:grid-cols-3");
     openBtn.classList.add("hidden");
     handleFocus(".team-menu");
     renderDragZone(state[teamSelected], handleDrag);
   });
   closeBtn.addEventListener("click", () => {
     document.getElementById("team-section").classList.add("hidden");
+    document
+      .querySelector("#grid-card-section")
+      .classList.add("lg:grid-cols-6");
+    document
+      .querySelector("#grid-card-section")
+      .classList.remove("lg:grid-cols-3");
+    document.querySelector("main").classList.remove("w-3/5");
     openBtn.classList.remove("hidden");
   });
 }
@@ -476,4 +509,96 @@ function handleTeamDetails() {
   team.forEach((pokemon) => {
     renderCardV2(pokemon, cardActions, section);
   });
+}
+
+function hanldeSelectionMenu(pokemon) {
+  const menu = document.querySelectorAll(".select-menu");
+
+  menu.forEach((element) => {
+    element.addEventListener("click", () => {
+      switch (element.id) {
+        case "description-menu":
+          console.log("click", element.id);
+          handleDescriptionCLick(pokemon);
+          break;
+        case "statics-menu":
+          console.log("click", element.id);
+          document.querySelector("#description").classList.add("hidden");
+          document.querySelector(".statics-menu").classList.remove("hidden");
+          document.querySelector(".evolution-menu").classList.add("hidden");
+          break;
+        case "evolution-menu":
+          console.log("click", element.id);
+          hanldeEvolutionChainClick(pokemon);
+          break;
+      }
+    });
+  });
+
+  setTimeout(() => {
+    const target = document.querySelector("#statics-menu");
+    if (target) {
+      target.focus({
+        preventScroll: true,
+      });
+    }
+  }, 300);
+}
+
+async function handleDescriptionCLick(pokemon) {
+  const pokeSpecies = await getPokemonByUrl(pokemon.species.url);
+
+  const flavorEsTexts = pokeSpecies.flavor_text_entries.filter(
+    (entry) => entry.language.name === "es",
+  );
+
+  const divDescription = document.createElement("div");
+  divDescription.classList.add(
+    "text-sm",
+    "md:text-lg",
+    "text-center",
+    "animate-opacidad",
+    "h-48",
+    "mt-4",
+  );
+  divDescription.innerHTML =
+    flavorEsTexts[Math.floor(Math.random() * flavorEsTexts.length)].flavor_text;
+  document.querySelector("#description").innerHTML = "";
+  document.querySelector("#description").appendChild(divDescription);
+  document.querySelector("#description").classList.remove("hidden");
+  document.querySelector(".statics-menu").classList.add("hidden");
+  document.querySelector(".evolution-menu").classList.add("hidden");
+}
+
+async function hanldeEvolutionChainClick(pokemon) {
+  const divEvolutionChain = document.querySelector(
+    "#evolution-chain-container",
+  );
+  divEvolutionChain.innerHTML = "";
+  const evolutionChainData = await handleEvolutionChain(pokemon);
+
+  for (const [key, pokemonEv] of evolutionChainData) {
+    if (pokemonEv) {
+      const evolutionChainTpl = /*html*/ ` 
+    <div class="flex animate-opacidad justify-between gap-5 mt-4 items-center">
+        <img src="${pokemonEv.sprites.other.dream_world.front_default}" alt="ejemplo" class="size-15 md:size-30">
+    </div>`;
+      divEvolutionChain.insertAdjacentHTML("beforeend", evolutionChainTpl);
+      divEvolutionChain.insertAdjacentHTML(
+        "beforeend",
+        /*html*/ `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5L16 12L8 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`,
+      );
+    }
+  }
+  if (evolutionChainData.size === 0) {
+    divEvolutionChain.insertAdjacentHTML(
+      "beforeend",
+      /*html*/ `<h2 class="font-bold md:text-lg">Este Pokémon no tiene evolución</h2>`,
+    );
+  }
+  document.querySelector("#description").classList.add("hidden");
+  document.querySelector(".statics-menu").classList.add("hidden");
+  document.querySelector(".evolution-menu").classList.remove("hidden");
 }

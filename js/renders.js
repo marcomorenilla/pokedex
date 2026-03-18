@@ -8,7 +8,7 @@ export async function renderUi(data, actions) {
   }
 
   renderDataList(data.pokemon);
-  renderCard(data.pokemon, actions);
+  renderCardV2(data.pokemon, actions, "#grid-card-section");
 }
 
 export function renderTypes(types) {
@@ -43,29 +43,33 @@ function renderDataList(pokemon) {
   dataList.insertAdjacentHTML("beforeend", optionTpl);
 }
 
-export function renderCard(pokemon, actions) {
-  const { onIsFavorite, onFavoriteClick, onShowEvolutionChain, onAddToTeam } =
+export function renderCardV2(pokemon, actions, sectionName) {
+  const { onIsFavorite, onFavoriteClick, onAddToTeam, onSelectionMenu } =
     actions;
 
   const onShowDetails = {
     pokemon,
-    onShowEvolutionChain,
+    onSelectionMenu,
   };
 
-  const gridSection = document.querySelector("#grid-card-section");
+  const gridSection = document.querySelector(`${sectionName}`);
   const sprites = pokemon.sprites ? pokemon.sprites : pokemon.front_default;
 
   const types = pokemon.types.map((type) => type.type.name);
 
-  const isFavorite = onIsFavorite(pokemon);
+  let isFavorite = onIsFavorite(pokemon);
 
   const cartTpl = /*html */ `
-    <article  class="relative flex flex-col justify-between gap-3 rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white)  shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
-    <div id="responsive-add-${pokemon.id}" class="lg:hidden absolute z-2 top-0 right-1 font-bold w-fit bg-white cursor-pointer hover:text-lg  p-1">+</div>
-    <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable cursor-grab flex relative w-auto h-auto flex-col  items-center">
-            <section class="bg-white relative size-full flex justify-center py-2 px-2 rounded-b-lg">
-            
-                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="pointer-events-none size-30 z-1">
+    <article  class=" md:w-[30vh] flex flex-col relative justify-between rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white) shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
+    <div 
+      id="responsive-add-${pokemon.id}" 
+      class="lg:hidden absolute z-2 top-0 right-1 font-bold w-fit bg-white p-1 ${sectionName === "#grid-card-section" ? "" : "hidden"}"
+    >
+      +
+    </div>
+    <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable flex relative w-auto h-auto flex-col  items-center">
+            <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
+                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-${sectionName == "#grid-card-section" ? 30 : 15} z-1">
             </section>
 
             <div class="p-2">
@@ -97,6 +101,7 @@ export function renderCard(pokemon, actions) {
                 viewBox="0 0 24 24" 
                 xmlns="http://www.w3.org/2000/svg"
                 style="cursor: pointer;"
+                class=${sectionName == "#grid-card-section" ? "" : "hidden"}
                 >
                 <path id="path-corazon-${pokemon.id}"
                     d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
@@ -109,15 +114,17 @@ export function renderCard(pokemon, actions) {
     </article>
     `;
   gridSection.insertAdjacentHTML("beforeend", cartTpl);
+  console.log("grid-section v2", cartTpl);
   const showMore = document.querySelector(`#card-${pokemon.id}`);
 
   const corazonSvg = document.getElementById(`heart-${pokemon.id}`);
   const pathCorazon = document.getElementById(`path-corazon-${pokemon.id}`);
 
   corazonSvg.addEventListener("click", () => {
+    isFavorite = !isFavorite;
     onFavoriteClick(pokemon, isFavorite);
 
-    if (!isFavorite) {
+    if (isFavorite) {
       pathCorazon.setAttribute("fill", "#cc0000");
       corazonSvg.style.transform = "scale(1.2)";
       setTimeout(() => (corazonSvg.style.transform = "scale(1)"), 100);
@@ -135,94 +142,8 @@ export function renderCard(pokemon, actions) {
   );
 }
 
-export function renderCardV2(pokemon, actions, sectionName) {
-  const { onIsFavorite, onFavoriteClick, onShowEvolutionChain } = actions;
-
-  const onShowDetails = {
-    pokemon,
-    onShowEvolutionChain,
-  };
-
-  const gridSection = document.querySelector(`${sectionName}`);
-  const sprites = pokemon.sprites ? pokemon.sprites : pokemon.front_default;
-
-  const types = pokemon.types.map((type) => type.type.name);
-
-  const isFavorite = onIsFavorite(pokemon);
-
-  const cartTpl = /*html */ `
-    <article  class="flex flex-col justify-between rounded-lg animate-opacidad bg-linear-to-br from-(--poke-ice)/30 to-(--poke-white) shadow-sm hover:shadow-lg hover:shadow-yellow-500 cursor-pointer">
-        <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable flex relative w-auto h-auto flex-col  items-center">
-            <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
-                <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-15 z-1">
-            </section>
-
-            <div class="p-2">
-
-                <section id="name-container" class="flex justify-center gap-1">
-                    <h2 class="font-bold text-xl">${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</h2>
-                </section>
-                <section id="type-container" class="flex flex-wrap font-bold justify-center gap-1">
-                                    ${types
-                                      .map((type) => {
-                                        const typeElement = `<p class="text-xs">${traduccionTipos[type]}</p>`;
-                                        return renderBadgeType(
-                                          type,
-                                          typeElement,
-                                        );
-                                      })
-                                      .join("")}
-                </section>
-            </div>
-        </div>
-        <div class="flex justify-between bg-linear-to-r from-(--poke-yellow) to-(--poke-white) cursor-[url('/assets/cursor-2.svg'),_default] p-1">
-            <section id="number-container" class="px-3">
-                <h2 class="font-bold text-lg">#${String(pokemon.id).padStart(3, "0")}</h2>
-            </section>
-            <svg 
-                id="heart-${pokemon.id}" 
-                width="20px" 
-                height="20px" 
-                viewBox="0 0 24 24" 
-                xmlns="http://www.w3.org/2000/svg"
-                style="cursor: pointer; display:none;"
-                >
-                <path id="path-corazon-${pokemon.id}"
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
-                    fill="${isFavorite ? "#cc0000" : "none"}"
-                    stroke="#CC0000" 
-                    stroke-width="2"
-                />
-            </svg>
-        </div>
-    </article>
-    `;
-  gridSection.insertAdjacentHTML("beforeend", cartTpl);
-  const showMore = document.querySelector(`#card-${pokemon.id}`);
-
-  const corazonSvg = document.getElementById(`heart-${pokemon.id}`);
-  const pathCorazon = document.getElementById(`path-corazon-${pokemon.id}`);
-
-  corazonSvg.addEventListener("click", () => {
-    onFavoriteClick(pokemon, isFavorite);
-
-    if (!isFavorite) {
-      pathCorazon.setAttribute("fill", "#cc0000");
-      corazonSvg.style.transform = "scale(1.2)";
-      setTimeout(() => (corazonSvg.style.transform = "scale(1)"), 100);
-    } else {
-      pathCorazon.setAttribute("fill", "none");
-    }
-  });
-
-  showMore.addEventListener(
-    "click",
-    async () => await renderDetails(onShowDetails),
-  );
-}
-
 async function renderDetails(onShowDetails) {
-  const { pokemon, onShowEvolutionChain } = onShowDetails;
+  const { pokemon, onSelectionMenu } = onShowDetails;
   const stastDialog = document.querySelector("#pokemon-stats");
   const sprites = pokemon.sprites ? pokemon.sprites : pokemon.front_default;
   const types = pokemon.types.map((type) => type.type.name);
@@ -253,22 +174,23 @@ async function renderDetails(onShowDetails) {
                                                           .join("")}
                 </div>
 
-                <div class="flex m-auto gap-2 w-fit font-bold md:text-xl border-b border-b-(--poke-gray) mt-3 justify-center items-center">
-                <div id="description-menu" class="select-menu p-1 hover:cursor-pointer focus:text-blue-700">Descripción</div>
-                <div id="statics-menu" class="select-menu p-1 hover:cursor-pointer focus:text-blue-700">Estadísticas</div>
-                <div id="evolution-menu"class="select-menu p-1 hover:cursor-pointer focus:text-blue-700">Cadena de evolución</div>
+                <div class="flex flex-col md:flex-row m-auto gap-2 w-fit font-bold md:text-xl border-b border-b-(--poke-gray) mt-3 justify-center items-center">
+                <button id="description-menu" class="outline-none select-menu p-1 hover:cursor-pointer focus:text-blue-700">Descripción</button>
+                <button id="statics-menu" class="outline-none select-menu p-1 hover:cursor-pointer focus:text-blue-700">Estadísticas</button>
+                <button id="evolution-menu"class="outline-none select-menu p-1 hover:cursor-pointer focus:text-blue-700">Cadena de evolución</button>
                 </div>
 
-                <div class="mt-2 flex statics-menu flex-col gap-2 items-center">
+                <div class="mt-2 h-48 flex statics-menu flex-col gap-2 items-center">
                    ${renderStats(stats)}
                 </div>
 
-                <div id="evolution-chain" class="p-5 hidden evolution-menu border-t border-t-(--poke-gray) flex-col justify-center w-full items-center gap-10"> 
-                <h2 class="font-bold md:text-xl p-2" >Cadena de evolución:</h2>
-                <div id="evolution-chain-container" class="flex   justify-between lg:w-3/5 m-auto [&_svg]:last:hidden items-center"></div>
+                <div id="description"></div>
+
+                <div id="evolution-chain" class="p-5 hidden h-48 evolution-menu  flex-col justify-center w-full items-center"> 
+                <div id="evolution-chain-container" class="flex  justify-between lg:w-3/5 m-auto [&_svg]:last:hidden items-center"></div>
                 </div>
 
-                <div id="pokemon-stats-height-weight" class="flex  gap-3 justify-center px-4 mt-3">
+                <div id="pokemon-stats-height-weight" class="flex  gap-3 justify-center px-4 mt-5">
 
                 </div>
 
@@ -286,10 +208,9 @@ async function renderDetails(onShowDetails) {
   stastDialog.classList.toggle("hidden");
   document.querySelector("body").classList.add("overflow-hidden");
 
-  renderEvolutionChain(pokemon, onShowEvolutionChain);
   renderHeightAndWeight(pokemon);
 
-  renderSelectionMenu();
+  onSelectionMenu(pokemon);
 
   const closeBtn = document.querySelector("#btn-close-stats");
   closeBtn.addEventListener("click", () => {
@@ -300,35 +221,6 @@ async function renderDetails(onShowDetails) {
     if (e.key === "Escape" && !stastDialog.classList.contains("hidden"))
       stastDialog.classList.toggle("hidden");
   });
-}
-
-async function renderEvolutionChain(pokemon, onShowEvolutionChain) {
-  const divEvolutionChain = document.querySelector(
-    "#evolution-chain-container",
-  );
-  const evolutionChainData = await onShowEvolutionChain(pokemon);
-
-  for (const [key, pokemonEv] of evolutionChainData) {
-    if (pokemonEv) {
-      const evolutionChainTpl = /*html*/ ` 
-    <div class="flex justify-between gap-5  items-center">
-        <img src="${pokemonEv.sprites.other.dream_world.front_default}" alt="ejemplo" class="size-15 md:size-30">
-    </div>`;
-      divEvolutionChain.insertAdjacentHTML("beforeend", evolutionChainTpl);
-      divEvolutionChain.insertAdjacentHTML(
-        "beforeend",
-        /*html*/ `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 5L16 12L8 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`,
-      );
-    }
-  }
-  if (evolutionChainData.size === 0) {
-    divEvolutionChain.insertAdjacentHTML(
-      "beforeend",
-      /*html*/ `<h2 class="font-bold md:text-lg">Este Pokémon no tiene evolución</h2>`,
-    );
-  }
 }
 
 function renderBadgeType(type, element) {
@@ -369,31 +261,11 @@ function renderHeightAndWeight(pokemon) {
   const weight = pokemon.weight / 10;
 
   const heightAndWeightTpl = /*html*/ `
-                        <h2 class="font-bold md:text-xl px-2 border-r border-l ">Altura:<span class="font-normal">${height}m</span></h2>
-                        <h2 class="font-bold md:text-xl px-2 border-r border-l ">Peso:<span class="font-normal">${weight}kg</span></h2>
+                        <h2 class="font-bold md:text-xl px-2 ">Altura:<span class="font-normal">${height}m</span></h2>
+                        <h2 class="font-bold md:text-xl px-2 ">Peso:<span class="font-normal">${weight}kg</span></h2>
     
 `;
   section.insertAdjacentHTML("beforeend", heightAndWeightTpl);
-}
-
-function renderSelectionMenu() {
-  const menu = document.querySelectorAll(".select-menu");
-
-  menu.forEach((element) => {
-    element.addEventListener("click", () => {
-      console.log("click", element.id);
-    });
-  });
-}
-
-export function renderNoContentDialog() {
-  const noContentDialog = document.querySelector("#no-content-dialog");
-  const noContentDialogBtn = document.querySelector(".no-content-dialog-btn");
-  noContentDialog.showModal();
-
-  noContentDialogBtn.addEventListener("click", () => {
-    noContentDialog.close();
-  });
 }
 
 export function renderDragZone(team, onDrag) {

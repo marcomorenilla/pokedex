@@ -13,6 +13,7 @@ export async function renderUi(data, actions) {
 
 export function renderTypes(types) {
   const typesSection = document.querySelector("#types-section");
+  const searchSection = document.querySelector("#search-container");
 
   types.forEach((type) => {
     const typeTpl = /*html*/ `
@@ -23,18 +24,21 @@ export function renderTypes(types) {
   });
 
   const btnFavs = /*html*/ `<button id="favs" class="type-btn font-bold bg-[var(${typeColors["favs"]})] animate-opacidad text-white p-1 hover:bg-white hover:border-3 hover:shadow-lg hover:border-[var(${typeColors["favs"]})] hover:text-[var(${typeColors["favs"]})] rounded-full cursor-pointer">Favoritos</button>`;
-  typesSection.insertAdjacentHTML(
-    "beforeend",
-    renderBadgeType("favs", btnFavs),
-  );
-
   const btnTodos = /*html*/ `
         <button id="todos" class="type-btn font-bold bg-[var(${typeColors["todos"]})] animate-opacidad text-white p-1 hover:bg-white hover:border-3 hover:shadow-lg hover:border-[var(${typeColors["todos"]})] hover:text-[var(${typeColors["todos"]})] rounded-full cursor-pointer">Todos</button>
         `;
-  typesSection.insertAdjacentHTML(
-    "beforeend",
-    renderBadgeType("todos", btnTodos),
+
+  const divEl = document.createElement("div");
+  divEl.classList.add(
+    "flex",
+    "mt-3",
+    "gap-5",
+    "justify-center",
+    "items-center",
   );
+  divEl.insertAdjacentHTML("beforeend", renderBadgeType("favs", btnFavs));
+  divEl.insertAdjacentHTML("beforeend", renderBadgeType("todos", btnTodos));
+  searchSection.appendChild(divEl);
 }
 
 function renderDataList(pokemon) {
@@ -67,7 +71,7 @@ export function renderCardV2(pokemon, actions, sectionName) {
     >
       +
     </div>
-    <div id="card-${pokemon.id}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable flex relative w-auto h-auto flex-col  items-center">
+    <div id="card-${pokemon.id}-${sectionName.slice(1)}" data-id="${pokemon.id}" data-name="${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}" data-sprite="${sprites.other.dream_world.front_default}" draggable="true" class="draggable flex relative w-auto h-auto flex-col  items-center">
             <section class="bg-white size-full flex justify-center py-2 px-2 rounded-b-lg">
                 <img src="${sprites.other.dream_world.front_default}" alt="pokemon" class="size-${sectionName == "#grid-card-section" ? 30 : 15} z-1">
             </section>
@@ -95,15 +99,17 @@ export function renderCardV2(pokemon, actions, sectionName) {
                 <h2 class="font-bold text-lg">#${String(pokemon.id).padStart(3, "0")}</h2>
             </section>
             <svg 
-                id="heart-${pokemon.id}" 
+                id="heart-${pokemon.id}-${sectionName.slice(1)}"
+                onclick=" 
                 width="20px" 
                 height="20px" 
                 viewBox="0 0 24 24" 
                 xmlns="http://www.w3.org/2000/svg"
                 style="cursor: pointer;"
-                class=${sectionName == "#grid-card-section" ? "" : "hidden"}
                 >
-                <path id="path-corazon-${pokemon.id}"
+                <path id="path-corazon-${pokemon.id}-${sectionName.slice(1)}"
+                class="heart-icon" 
+                data-id="heart-${pokemon.id}" 
                     d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
                     fill="${isFavorite ? "#cc0000" : "none"}"
                     stroke="#CC0000" 
@@ -114,23 +120,21 @@ export function renderCardV2(pokemon, actions, sectionName) {
     </article>
     `;
   gridSection.insertAdjacentHTML("beforeend", cartTpl);
-  console.log("grid-section v2", cartTpl);
-  const showMore = document.querySelector(`#card-${pokemon.id}`);
+  const showMore = document.querySelector(
+    `#card-${pokemon.id}-${sectionName.slice(1)}`,
+  );
 
-  const corazonSvg = document.getElementById(`heart-${pokemon.id}`);
-  const pathCorazon = document.getElementById(`path-corazon-${pokemon.id}`);
+  const corazonSvg = document.getElementById(
+    `heart-${pokemon.id}-${sectionName.slice(1)}`,
+  );
+  const pathCorazon = document.getElementById(
+    `path-corazon-${pokemon.id}-${sectionName.slice(1)}`,
+  );
 
   corazonSvg.addEventListener("click", () => {
     isFavorite = !isFavorite;
     onFavoriteClick(pokemon, isFavorite);
-
-    if (isFavorite) {
-      pathCorazon.setAttribute("fill", "#cc0000");
-      corazonSvg.style.transform = "scale(1.2)";
-      setTimeout(() => (corazonSvg.style.transform = "scale(1)"), 100);
-    } else {
-      pathCorazon.setAttribute("fill", "none");
-    }
+    renderHeartFill(isFavorite, pokemon.id);
   });
 
   const addToTeam = document.querySelector(`#responsive-add-${pokemon.id}`);
@@ -141,7 +145,21 @@ export function renderCardV2(pokemon, actions, sectionName) {
     async () => await renderDetails(onShowDetails),
   );
 }
-
+function renderHeartFill(isFavorite, id) {
+  const heartIcons = document.querySelectorAll(`.heart-icon`);
+  heartIcons.forEach((icon) => {
+    const dataId = icon.getAttribute("data-id");
+    if (dataId == `heart-${id}`) {
+      if (isFavorite) {
+        icon.setAttribute("fill", "#cc0000");
+        icon.style.transform = "scale(1.2)";
+        setTimeout(() => (icon.style.transform = "scale(1)"), 100);
+      } else {
+        icon.setAttribute("fill", "none");
+      }
+    }
+  });
+}
 async function renderDetails(onShowDetails) {
   const { pokemon, onSelectionMenu } = onShowDetails;
   const stastDialog = document.querySelector("#pokemon-stats");
@@ -153,7 +171,7 @@ async function renderDetails(onShowDetails) {
 
   stastDialog.innerHTML = "";
   const detailsTpl = /*html*/ `
-    <div class="m-auto animate-visible bg-white rounded-2xl w-5/6 overflow-y-auto max-h-[90vh] text-center shadow-2xl">
+    <div class=" m-auto animate-visible bg-white rounded-2xl w-5/6 overflow-y-auto max-h-[90vh] text-center shadow-2xl">
             <div class="p-5 border-b border-b-(--poke-gray) flex justify-center items-center">
                 <img src="${sprites.other.dream_world.front_default}" alt="ejemplo" class="p-2 size-40">
             </div>
